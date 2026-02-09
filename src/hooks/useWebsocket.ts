@@ -12,7 +12,7 @@ export function useWebsocket() {
     async function registerSW() {
         if ('serviceWorker' in navigator) {
             try {
-                registration.value = await navigator.serviceWorker.register('/log-lottery/sw.js')
+                registration.value = await navigator.serviceWorker.register('/EliteYear/sw.js')
                 console.log('Service Worker 注册成功:', registration)
                 listenSWMessage()
             }

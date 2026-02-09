@@ -85,7 +85,7 @@ watch(() => route?.path, (path) => {
     }
     
     // 只在 Home 页面添加监听器
-    if (path.includes('/log-lottery') && !path.includes('/config')) {
+    if (path.includes('/EliteYear') && !path.includes('/config')) {
         lotteryTriggerHandler = handleBluetoothLotteryTrigger
         window.addEventListener('lottery-trigger', lotteryTriggerHandler)
     }
@@ -99,15 +99,15 @@ const qrCodeImg = useQRCode(mobileUrl)
 const visible = ref(true)
 
 function enterConfig() {
-    router.push('/log-lottery/config')
+    router.push('/EliteYear/config')
 }
 function enterHome() {
-    router.push('/log-lottery')
+    router.push('/EliteYear')
 }
 async function openMobileQrCode() {
     const originUrl = getOriginUrl()
     const userSignature = await getUniqueSignature()
-    mobileUrl.value = `${originUrl}/log-lottery/mobile?userSignature=${userSignature}`
+    mobileUrl.value = `${originUrl}/EliteYear/mobile?userSignature=${userSignature}`
     customDialogRef.value.showDialog()
 }
 function handleSubmit() {

@@ -28,7 +28,7 @@ async function getFinger() {
 async function setMobileUrl() {
     const originUrl = getOriginUrl()
     const userSignature = await getFinger()
-    mobileUrl.value = `${originUrl}/log-lottery/mobile?userSignature=${userSignature}`
+    mobileUrl.value = `${originUrl}/EliteYear/mobile?userSignature=${userSignature}`
 }
 onMounted(() => {
     getFinger()
