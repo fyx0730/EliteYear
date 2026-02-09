@@ -33,6 +33,19 @@ jobs:
           node-version: '22'
           cache: 'pnpm'
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -41,8 +54,16 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: List dist directory
-        run: ls -la dist || echo "dist directory not found"
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Error: dist directory not found!"
+            exit 1
+          fi
+          echo "Build output contents:"
+          ls -la dist
+          echo "Total files:"
+          find dist -type f | wc -l
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
