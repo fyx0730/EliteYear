@@ -9,7 +9,7 @@ interface IColumnsProps {
 }
 
 export function tableColumns(props: IColumnsProps) {
-    const columns = [
+    const columns: any[] = [
         {
             label: i18n.global.t('data.number'),
             props: 'uid',
@@ -136,7 +136,7 @@ export function tableColumns(props: IColumnsProps) {
         columns.push({
             label: i18n.global.t('data.prizeTime'),
             props: 'prizeTime',
-        } as any)
+        })
     }
     
     // 添加操作列
@@ -152,7 +152,7 @@ export function tableColumns(props: IColumnsProps) {
                 },
             },
         ],
-    } as any)
+    })
     
     return columns
 }
