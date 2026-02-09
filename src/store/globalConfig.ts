@@ -29,6 +29,7 @@ export const useGlobalConfig = defineStore('global', {
                     font: '微软雅黑',
                     titleFont: '微软雅黑',
                     titleFontSyncGlobal: true,
+                    cardOpacity: 0.5, // 卡片透明度 (0-1)
                 },
                 musicList: defaultMusicList as IMusic[],
                 imageList: defaultImageList as IImage[],

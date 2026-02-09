@@ -14,6 +14,7 @@ export interface IPersonConfig {
     prizeName: string[]
     prizeId: string[]
     prizeTime: string[]
+    orderIndex?: number // 用于排序的索引
 }
 export interface Separate {
     id: string
