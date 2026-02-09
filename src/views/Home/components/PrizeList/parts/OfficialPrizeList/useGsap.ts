@@ -66,7 +66,7 @@ export function useGsap(scrollContainerRef: any, liRefs: any, isScroll: Ref<bool
     function handleScroll(h: number) {
         scrollContainerRef.value.scrollTop += h
     }
-    watch([isScroll, prizeShow, temporaryPrizeShow], ([val1, val2, val3]) => {
+    watch([isScroll, prizeShow, () => temporaryPrizeShow], ([val1, val2, val3]) => {
         if (val1 && val2 && !val3) {
             setTimeout(() => {
                 initGsapAnimation()

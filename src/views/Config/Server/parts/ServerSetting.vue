@@ -51,13 +51,18 @@ hostValue.value = currentServer.value?.host || ''
           </label>
           <div class="radio-group flex gap-9">
             <ul class="flex gap-3">
-              <li v-for="item in serverList" :key="item.id" class="flex flex-col">
-                <label for="default-server">{{ item.name }}</label>
-                <input id="default-server" type="radio" name="radio-1" class="radio" :checked="currentServer?.value === item.value" @change="currentServer = item">
+              <li v-for="(item, index) in serverList" :key="item.id" class="flex flex-col">
+                <label :for="`server-radio-${index}`">{{ item.name }}</label>
+                <input :id="`server-radio-${index}`" type="radio" name="server-radio" class="radio" :checked="currentServer?.value === item.value" @change="currentServer = item">
               </li>
             </ul>
           </div>
+          <label for="server-host-input" class="label">
+            <span class="label-text">服务地址</span>
+          </label>
           <input
+            id="server-host-input"
+            name="server-host"
             type="text"
             placeholder="请输入服务地址"
             :disabled="currentServer.value === 'default'"

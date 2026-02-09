@@ -13,9 +13,9 @@ interface MasonryWaterfallProps {
 
 // 默认参数
 const props = withDefaults(defineProps<MasonryWaterfallProps>(), {
-    columnWidth: 120,
+    columnWidth: 300,
     gutter: 16,
-    fitWidth: true,
+    fitWidth: false,
 })
 
 // Vue Ref 管理 DOM 容器和 masonry 实例
@@ -87,9 +87,9 @@ defineExpose({ refreshLayout })
 <style scoped>
 .masonry-container {
   width: 100%;
-  /* max-width: 1400px; */
+  max-width: 100%;
   margin: 0 auto;
-  padding: 20px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
@@ -99,15 +99,34 @@ defineExpose({ refreshLayout })
   box-sizing: border-box;
   break-inside: avoid; /* 兼容 Safari */
   min-height: 100px; /* 避免内容过矮导致布局异常 */
+  width: 100% !important; /* 小屏幕单列 */
 }
 
-/* 响应式适配：小屏调整列宽 */
-/* @media (max-width: 768px) {
+/* 响应式适配 */
+@media (min-width: 640px) {
   .masonry-container {
-    padding: 10px;
+    padding: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .masonry-container {
+    padding: 16px;
   }
   .masonry-container > * {
-    width: calc(50% - v-bind('`${gutter}px`')) !important;
+    width: calc(50% - v-bind('`${gutter}px`') / 2) !important; /* 中等屏幕双列 */
   }
-} */
+}
+
+@media (min-width: 1024px) {
+  .masonry-container {
+    padding: 20px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .masonry-container > * {
+    width: auto !important; /* 大屏幕恢复自动宽度 */
+  }
+}
 </style>

@@ -23,14 +23,34 @@
 /* 添加动画效果 */
 .scroll-button-down {
     animation: bounce-down 2s infinite;
+    will-change: transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 /* 添加动画效果 */
 .scroll-button-up {
     animation: bounce-up 2s infinite;
+    will-change: transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .scroll-container {
+    // 硬件加速优化，消除文字残影
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    
     &::before {
         content: '';
         position: absolute;
@@ -42,6 +62,16 @@
 
 .scroll-container-end {
     height: 100%;
+    
+    // 硬件加速优化，消除文字残影
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
 
     &::before {
         content: '';
@@ -52,7 +82,17 @@
     }
 }
 
-.no-scroll {}
+.no-scroll {
+    // 硬件加速优化，消除文字残影
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+}
 
 @keyframes bounce-down {
 
@@ -61,15 +101,15 @@
     50%,
     80%,
     100% {
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 
     40% {
-        transform: translateY(-5px);
+        transform: translateY(-5px) translateZ(0);
     }
 
     60% {
-        transform: translateY(-2px);
+        transform: translateY(-2px) translateZ(0);
     }
 }
 
@@ -80,15 +120,15 @@
     50%,
     80%,
     100% {
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 
     40% {
-        transform: translateY(5px);
+        transform: translateY(5px) translateZ(0);
     }
 
     60% {
-        transform: translateY(2px);
+        transform: translateY(2px) translateZ(0);
     }
 }
 
@@ -104,6 +144,12 @@
 
     border-radius: 20px;
     padding: 3px;
+    
+    // 硬件加速优化
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .current-prize::before {
@@ -115,13 +161,20 @@
     height: 100%;
     background: linear-gradient(115deg, #4fcf70, #fad648, #a767e5, #12bcfe, #44ce7b);
     background-size: 25% 100%;
-    animation: an-at-keyframe-css-at-rule-that-translates-via-the-transform-property-the-background-by-negative-25-percent-of-its-width-so-that-it-gives-a-nice-border-animation_-We-use-the-translate-property-to-have-a-nice-transition-so-it_s-not-a-jerk-of-a-start-or-stop .75s linear infinite;
+    animation: an-at-keyframe-css-at-rule-that-translates-via-the-transform-property-the-background-by-negative-25-percent-of-its-width-so-that-it-gives-a-nice-border-animation_-We-use-the-translate-property-to-have-a-nice-transition-so-it_s-not-a-jerk-of-a-start-or-stop 3s linear infinite;
     // animation-play-state: paused;
     translate: -5% 0%;
-    transition: translate 0.25s ease-out;
+    transition: translate 0.5s ease-out;
     animation-play-state: running;
-    transition-duration: 0.75s;
+    transition-duration: 1.5s;
     translate: 0% 0%;
+    
+    // 硬件加速优化
+    will-change: transform;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .current-prize::after {
@@ -131,10 +184,43 @@
     border-top-left-radius: 20px;
     border-bottom-right-radius: 20px;
     z-index: -1;
+    
+    // 硬件加速优化
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 @keyframes an-at-keyframe-css-at-rule-that-translates-via-the-transform-property-the-background-by-negative-25-percent-of-its-width-so-that-it-gives-a-nice-border-animation_-We-use-the-translate-property-to-have-a-nice-transition-so-it_s-not-a-jerk-of-a-start-or-stop {
     to {
-        transform: translateX(-25%);
+        transform: translateX(-25%) translateZ(0);
+    }
+}
+
+// 奖品卡片硬件加速优化
+.prize-card {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    // 优化卡片内文字渲染
+    h2, p {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+// 动画期间禁用所有 tooltip
+.is-animating {
+    .tooltip::before,
+    .tooltip::after {
+        content: none !important;
+    }
+    
+    :deep(.tooltip::before),
+    :deep(.tooltip::after) {
+        content: none !important;
     }
 }

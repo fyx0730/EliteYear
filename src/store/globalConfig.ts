@@ -135,6 +135,10 @@ export const useGlobalConfig = defineStore('global', {
         getWinMusic(state) {
             return state.globalConfig.winMusic
         },
+        // 获取卡片透明度
+        getCardOpacity(state) {
+            return state.globalConfig.theme.cardOpacity ?? 0.5
+        },
     },
     actions: {
         // 设置全局配置
@@ -284,6 +288,10 @@ export const useGlobalConfig = defineStore('global', {
         setIsPlayWinMusic(winMusic: boolean) {
             this.globalConfig.winMusic = winMusic
         },
+        // 设置卡片透明度
+        setCardOpacity(cardOpacity: number) {
+            this.globalConfig.theme.cardOpacity = Math.max(0, Math.min(1, cardOpacity))
+        },
         // 重置所有配置
         reset() {
             this.globalConfig = {
@@ -309,6 +317,7 @@ export const useGlobalConfig = defineStore('global', {
                     font: '微软雅黑',
                     titleFont: '微软雅黑',
                     titleFontSyncGlobal: true,
+                    cardOpacity: 0.5, // 卡片透明度 (0-1)
                 },
                 musicList: defaultMusicList as IMusic[],
                 imageList: defaultImageList as IImage[],

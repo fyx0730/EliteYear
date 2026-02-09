@@ -2,40 +2,62 @@
     cursor: default;
     text-align: center;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+    box-sizing: border-box;
 
     .card-id {
         position: absolute;
-        top: 10px;
-        right: 20px;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 2;
+        font-size: 0.9em;
+        opacity: 0.85;
+        font-weight: 600;
+        text-align: center;
+        white-space: nowrap;
     }
 
     .card-name {
-        position: absolute;
-        top: 40px;
-        left: 0px;
-        right: 0;
-        font-weight: bold;
+        position: relative;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         z-index: 2;
+        line-height: 1.4;
+        max-width: 100%;
     }
 
     .card-avatar-name {
-        top: auto;
-        bottom: 0;
-        left: 0px;
+        position: absolute;
+        bottom: 12px;
+        left: 0;
         right: 0;
-        line-height: 2 !important;
+        line-height: 1.5 !important;
+        font-weight: 600;
+        z-index: 2;
+        padding: 0 8px;
     }
 
     .card-detail {
         position: absolute;
         left: 0;
         right: 0;
-        bottom: 15px;
+        bottom: 8px;
         z-index: 2;
+        font-size: 0.85em;
+        line-height: 1.4;
+        padding: 0 8px;
+        opacity: 0.9;
     }
 
     .card-avatar {
@@ -54,6 +76,11 @@
 .lucky-element-card {
     cursor: default;
     user-select: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+    box-sizing: border-box;
 
     &::before {
         background-color: linear-gradient(-45deg, #e81cff 0%, #40c9ff 100%);
@@ -62,33 +89,45 @@
 
     .card-id {
         position: absolute;
-        top: 20px;
-        right: 20px;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 2;
+        font-size: 1em;
+        opacity: 0.9;
+        font-weight: 700;
+        text-align: center;
+        white-space: nowrap;
     }
 
     .card-name {
         text-align: center;
         z-index: 2;
-        position: absolute;
-        top: 40px;
-        left: 0px;
-        right: 0;
-        font-weight: bold;
+        position: relative;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 12px 0;
+        font-weight: 700;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        // -webkit-animation: tracking-in-expand-fwd 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) both;
-        // animation: tracking-in-expand-fwd 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) both;
-        // animation-delay: 0.6s;
+        line-height: 1.3;
+        max-width: 100%;
+        font-size: 1.1em;
     }
 
     .card-avatar-name {
-        top: auto;
-        bottom: 0;
-        left: 0px;
+        position: absolute;
+        bottom: 16px;
+        left: 0;
         right: 0;
-        line-height: 2 !important;
+        line-height: 1.5 !important;
+        font-weight: 700;
+        z-index: 2;
+        padding: 0 12px;
+        font-size: 1.05em;
     }
 
     .card-detail {
@@ -97,7 +136,11 @@
         right: 0;
         text-align: center;
         z-index: 2;
-        bottom: 15px;
+        bottom: 10px;
+        font-size: 0.9em;
+        line-height: 1.4;
+        padding: 0 12px;
+        opacity: 0.95;
     }
 
     .card-avatar {
@@ -110,5 +153,336 @@
         width: 280px !important;
         height: 240px !important;
         object-fit: cover;
+    }
+}
+
+/* ==================== 优化动画和交互效果 ==================== */
+
+/* 淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* 按钮增强样式 */
+.btn {
+    @apply transition-all duration-200 ease-out;
+    
+    &:hover:not(:disabled) {
+        @apply shadow-lg;
+        transform: translateY(-1px);
+    }
+    
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+}
+
+/* 表单输入框增强 */
+.input, .select, .textarea {
+    @apply transition-all duration-200;
+    
+    &:focus {
+        @apply ring-2 ring-primary/30 border-primary;
+        transform: scale(1.01);
+    }
+}
+
+/* 卡片悬停效果 */
+.card {
+    @apply transition-all duration-300;
+    
+    &:hover {
+        @apply shadow-xl;
+        transform: translateY(-2px);
+    }
+}
+
+/* 响应式减少动画 */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== 响应式布局优化 ==================== */
+
+/* 确保容器不会溢出 */
+.overflow-x-auto,
+.max-w-full {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* 小屏幕优化 */
+@media (max-width: 640px) {
+    /* 减小按钮间距 */
+    .btn-sm {
+        @apply text-xs px-2;
+    }
+    
+    /* 减小卡片内边距 */
+    .card,
+    fieldset {
+        @apply p-3;
+    }
+    
+    /* 标题字体缩小 */
+    h1 {
+        @apply text-xl;
+    }
+    h2 {
+        @apply text-lg;
+    }
+}
+
+/* 中等屏幕优化 */
+@media (min-width: 641px) and (max-width: 1023px) {
+    /* 调整侧边栏 */
+    aside {
+        @apply w-full;
+    }
+}
+
+/* 防止横向滚动 */
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* ==================== Toast 通知优化 ==================== */
+
+/* 覆盖 vue-toast-notification 默认样式 */
+.v-toast {
+    /* 位置和间距 */
+    &.v-toast--top-right {
+        top: 1.5rem !important;
+        right: 1.5rem !important;
+    }
+    
+    /* Toast 容器 */
+    .v-toast__item {
+        min-width: 240px !important;
+        max-width: 320px !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1rem !important;
+        backdrop-filter: blur(12px) !important;
+        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1), 
+                    0 2px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        
+        /* 动画时长 */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        
+        /* 成功样式 - 使用 Glassmorphism 风格，与 default 保持一致 */
+        &.v-toast__item--success {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 4px 16px rgba(255, 255, 255, 0.1) inset !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            
+            /* 隐藏图标，保持与 default 一致 */
+            .v-toast__icon {
+                display: none !important;
+            }
+        }
+        
+        /* 错误样式 - 使用 Glassmorphism 风格 */
+        &.v-toast__item--error {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 4px 16px rgba(255, 255, 255, 0.1) inset !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            
+            .v-toast__icon {
+                display: none !important;
+            }
+        }
+        
+        /* 警告样式 - 使用 Glassmorphism 风格 */
+        &.v-toast__item--warning {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 4px 16px rgba(255, 255, 255, 0.1) inset !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            
+            .v-toast__icon {
+                display: none !important;
+            }
+        }
+        
+        /* 信息样式 - 使用 Glassmorphism 风格 */
+        &.v-toast__item--info {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 4px 16px rgba(255, 255, 255, 0.1) inset !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            
+            .v-toast__icon {
+                display: none !important;
+            }
+        }
+        
+        /* 默认样式 - 使用 Glassmorphism 风格，适配红色背景 */
+        &.v-toast__item--default {
+            background: rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 4px 16px rgba(255, 255, 255, 0.1) inset !important;
+            
+            /* 隐藏图标 */
+            .v-toast__icon {
+                display: none !important;
+            }
+        }
+    }
+    
+    /* Toast 文本 */
+    .v-toast__text {
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+        padding: 0 0.75rem !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+        text-align: center !important;
+    }
+    
+    /* 针对 festival-red 主题的 Toast 优化 */
+    [data-theme=festival-red] .v-toast {
+        .v-toast__item {
+            /* 所有类型的 toast 都使用统一的 Glassmorphism 风格 */
+            &.v-toast__item--default,
+            &.v-toast__item--success,
+            &.v-toast__item--error,
+            &.v-toast__item--warning,
+            &.v-toast__item--info {
+                background: rgba(255, 255, 255, 0.2) !important;
+                backdrop-filter: blur(24px) !important;
+                -webkit-backdrop-filter: blur(24px) !important;
+                border: 1px solid rgba(255, 255, 255, 0.35) !important;
+                box-shadow: 0 8px 32px rgba(157, 5, 0, 0.4),
+                            0 4px 16px rgba(255, 255, 255, 0.15) inset,
+                            0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+                color: #FFFFFF !important;
+                font-weight: 500 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+                
+                /* 隐藏图标 */
+                .v-toast__icon {
+                    display: none !important;
+                }
+            }
+        }
+        
+        .v-toast__text {
+            color: #FFFFFF !important;
+            font-size: 1.05rem !important;
+            font-weight: 600 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+            text-align: center !important;
+        }
+    }
+    
+    /* 关闭按钮 */
+    .v-toast__icon--dismiss {
+        opacity: 0.8 !important;
+        transition: opacity 0.2s ease !important;
+        
+        &:hover {
+            opacity: 1 !important;
+        }
+    }
+}
+
+/* 响应式优化 */
+@media (max-width: 640px) {
+    .v-toast {
+        &.v-toast--top-right {
+            top: 1rem !important;
+            right: 1rem !important;
+            left: 1rem !important;
+        }
+        
+        .v-toast__item {
+            min-width: auto !important;
+            max-width: 100% !important;
+        }
+    }
+}
+
+/* 动画进入效果 */
+@keyframes toast-slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 动画退出效果 */
+@keyframes toast-slide-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
     }
 }

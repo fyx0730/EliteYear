@@ -80,7 +80,19 @@ class IndexDb {
     // 按 dateTime 排序获取所有数据
     async getDataSortedByDateTime(tableName: string, orderTimeName: string = 'dataTime') {
         const allData = await this.dbStore[tableName].orderBy(orderTimeName).toArray()
-        return allData
+        // 进行二次排序以确保稳定排序
+        // 先按 createTime 排序，如果相同则按 orderIndex 排序
+        return allData.sort((a: any, b: any) => {
+            // 先按 createTime 排序
+            const timeCompare = (a[orderTimeName] || '').localeCompare(b[orderTimeName] || '')
+            if (timeCompare !== 0) {
+                return timeCompare
+            }
+            // 如果 createTime 相同，按 orderIndex 排序（如果存在）
+            const aOrderIndex = a.orderIndex !== undefined ? a.orderIndex : Number.MAX_SAFE_INTEGER
+            const bOrderIndex = b.orderIndex !== undefined ? b.orderIndex : Number.MAX_SAFE_INTEGER
+            return aOrderIndex - bOrderIndex
+        })
     }
 
     // 分页获取数据

@@ -103,7 +103,8 @@ watch(visible, (newVal) => {
     <template #content>
       <div class="flex flex-col items-center gap-6 w-full px-12">
         <FileUpload v-if="visible" :limit-type="limitType" @upload-file="uploadFile" />
-        <input v-model="fileName" :disabled="imageData === null" type="text" :placeholder="t('placeHolder.imageName')" class="input w-full">
+        <label for="image-file-name" class="sr-only">图片文件名</label>
+        <input id="image-file-name" name="image-file-name" v-model="fileName" :disabled="imageData === null" type="text" :placeholder="t('placeHolder.imageName')" class="input w-full">
       </div>
     </template>
   </CustomDialog>

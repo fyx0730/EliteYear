@@ -80,7 +80,16 @@ export function usePrizeConfig() {
 
     function delItem(item: IPrizeConfig) {
         prizeConfig.deletePrizeConfig(item.id)
-        toast.success(i18n.global.t('error.deleteSuccess'))
+        // 同步删除本地列表中的项
+        const index = prizeList.value.findIndex(prize => prize.id === item.id)
+        if (index > -1) {
+            prizeList.value.splice(index, 1)
+        }
+        toast.success(i18n.global.t('error.deleteSuccess'), {
+            position: 'top-right',
+            duration: 3000,
+            dismissible: true,
+        })
     }
     function addPrize() {
         const defaultPrizeCOnfig: IPrizeConfig = {
@@ -105,16 +114,28 @@ export function usePrizeConfig() {
             frequency: 1,
         }
         prizeList.value.push(defaultPrizeCOnfig)
-        toast.success(i18n.global.t('error.success'))
+        toast.success(i18n.global.t('error.success'), {
+            position: 'top-right',
+            duration: 3000,
+            dismissible: true,
+        })
     }
     function resetDefault() {
         prizeConfig.resetDefault()
         prizeList.value = cloneDeep(localPrizeList.value)
-        toast.success(i18n.global.t('error.success'))
+        toast.success(i18n.global.t('error.success'), {
+            position: 'top-right',
+            duration: 3000,
+            dismissible: true,
+        })
     }
     async function delAll() {
         prizeList.value = []
-        toast.success(i18n.global.t('error.success'))
+        toast.success(i18n.global.t('error.success'), {
+            position: 'top-right',
+            duration: 3000,
+            dismissible: true,
+        })
     }
     onMounted(() => {
         getImageDbStore()

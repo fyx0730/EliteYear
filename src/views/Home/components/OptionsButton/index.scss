@@ -33,13 +33,32 @@
         -webkit-animation: pulsate-fwd 1.2s ease-in-out infinite both;
         animation: pulsate-fwd 1.2s ease-in-out infinite both;
 
+    /* 年会火红主题 - 按钮渐变边框调整，使用更协调的红色系渐变 */
+    [data-theme=festival-red] & {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)), 
+                          linear-gradient(137.48deg, #FFD700 0%, #FF8C42 25%, #FF6B35 50%, #DC143C 75%, #B22222 100%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 4px 20px rgba(157, 5, 0, 0.4),
+                    0 2px 10px rgba(255, 140, 0, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
         &:hover #container-stars {
             z-index: 1;
             background-color: #212121;
         }
 
         &:hover {
-            transform: scale(1.1)
+            transform: scale(1.05);
+            transition: transform 0.2s ease-out;
+        }
+        
+        /* 年会火红主题 - 悬停效果优化 */
+        [data-theme=festival-red] &:hover {
+            box-shadow: 0 6px 25px rgba(157, 5, 0, 0.5),
+                        0 3px 15px rgba(255, 140, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.25);
         }
 
         &:active {
@@ -51,6 +70,18 @@
 
         &:active .circle {
             background: #FE53BB;
+        }
+
+        /* 年会火红主题 - 激活状态调整 */
+        [data-theme=festival-red] &:active {
+            border: double 4px #FFD700;
+            box-shadow: 0 2px 15px rgba(255, 215, 0, 0.6),
+                        0 0 30px rgba(255, 140, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        [data-theme=festival-red] &:active .circle {
+            background: #FFD700;
         }
 
         strong {
@@ -132,6 +163,15 @@
                 &:nth-of-type(2) {
                     background: rgba(142, 81, 234, 0.704);
                 }
+
+                /* 年会火红主题 - 发光效果调整 */
+                [data-theme=festival-red] &:nth-of-type(1) {
+                    background: rgba(255, 215, 61, 0.636);
+                }
+
+                [data-theme=festival-red] &:nth-of-type(2) {
+                    background: rgba(255, 140, 0, 0.704);
+                }
             }
         }
     }
@@ -190,6 +230,33 @@
         }
     }
 
+    /* 年会火红主题 - 按钮颜色调整，使用 Glassmorphism 风格 */
+    [data-theme=festival-red] & .btn-neon {
+        --glow-color: rgba(255, 215, 61, 0.9);
+        --glow-spread-color: rgba(255, 140, 0, 0.4);
+        --enhanced-glow-color: rgba(255, 230, 100, 0.8);
+        --btn-color: rgba(255, 255, 255, 0.15);
+        background-color: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 2px solid rgba(255, 215, 61, 0.6);
+        box-shadow: 0 4px 20px rgba(157, 5, 0, 0.4),
+                    0 2px 10px rgba(255, 140, 0, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* 年会火红主题 - 按钮悬停效果 */
+    [data-theme=festival-red] & .btn-neon:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 215, 61, 0.9);
+        box-shadow: 0 6px 25px rgba(157, 5, 0, 0.5),
+                    0 3px 15px rgba(255, 140, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+
     .btn-cancel {
         cursor: pointer;
         display: flex;
@@ -207,6 +274,39 @@
         background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #ffdb3b 10%, #FE53BB 45%, #8F51EA 67%, #0044ff 87%);
         background-origin: border-box;
         background-clip: content-box, border-box;
+    }
+
+    /* 年会火红主题 - 取消按钮调整，使用更柔和的样式 */
+    [data-theme=festival-red] & .btn-cancel {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)), 
+                          linear-gradient(137.48deg, rgba(180, 50, 50, 0.6) 0%, rgba(157, 5, 0, 0.7) 50%, rgba(139, 0, 0, 0.8) 100%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 2px solid rgba(180, 50, 50, 0.5);
+        box-shadow: 0 4px 20px rgba(157, 5, 0, 0.3),
+                    0 2px 10px rgba(139, 0, 0, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* 年会火红主题 - 取消按钮悬停效果 */
+    [data-theme=festival-red] & .btn-cancel:hover {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.18)), 
+                          linear-gradient(137.48deg, rgba(180, 50, 50, 0.7) 0%, rgba(157, 5, 0, 0.8) 50%, rgba(139, 0, 0, 0.9) 100%);
+        border-color: rgba(180, 50, 50, 0.7);
+        box-shadow: 0 6px 25px rgba(157, 5, 0, 0.4),
+                    0 3px 15px rgba(139, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    /* 年会火红主题 - 取消按钮激活状态 */
+    [data-theme=festival-red] & .btn-cancel:active {
+        border-color: rgba(180, 50, 50, 0.9);
+        box-shadow: 0 2px 15px rgba(157, 5, 0, 0.5),
+                    0 0 20px rgba(139, 0, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 }
 

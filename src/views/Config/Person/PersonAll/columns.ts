@@ -9,6 +9,9 @@ export function tableColumns(props: IColumnsProps) {
         {
             label: i18n.global.t('data.number'),
             props: 'uid',
+            formatValue(row: any, index: number) {
+                return (index + 1).toString()
+            },
         },
         {
             label: i18n.global.t('data.name'),
@@ -24,10 +27,6 @@ export function tableColumns(props: IColumnsProps) {
             formatValue(row: any) {
                 return row.avatar ? `<img src="${row.avatar}" alt="avatar" style="width: 50px; height: 50px;"/>` : '-'
             },
-        },
-        {
-            label: i18n.global.t('data.identity'),
-            props: 'identity',
         },
         {
             label: i18n.global.t('data.isWin'),

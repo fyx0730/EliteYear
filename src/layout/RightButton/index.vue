@@ -3,10 +3,13 @@ import { useFullscreen } from '@vueuse/core'
 import { useQRCode } from '@vueuse/integrations/useQRCode'
 import { Maximize, Minimize, TabletSmartphone } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
-import { onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import CustomDialog from '@/components/Dialog/index.vue'
+import { useBackgroundMusicInstance } from '@/hooks/useBackgroundMusicInstance'
+import { useBluetooth } from '@/hooks/useBluetooth'
+import { useToast } from 'vue-toast-notification'
 import useStore from '@/store'
 import { getOriginUrl, getUniqueSignature } from '@/utils/auth'
 import { usePlayMusic } from './usePlayMusic'
@@ -16,10 +19,77 @@ const {
     getServerStatus: serverStatus,
 } = storeToRefs(serverConfig)
 const { playMusic, currentMusic, nextPlay } = usePlayMusic()
+
+// 背景音乐管理器
+const bgmController = useBackgroundMusicInstance()
+const bgmIsPlaying = computed(() => bgmController.isPlaying.value)
+
+// 切换背景音乐播放/暂停
+function toggleBackgroundMusic() {
+    bgmController.toggleBGM()
+    // 触发用户交互，确保可以播放
+    bgmController.onUserInteraction()
+}
+
 const { isFullscreen, toggle: toggleScreen } = useFullscreen()
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+
+// Toast 提示
+const toast = useToast()
+
+// 蓝牙功能（仅在 Home 页面启用）
+const { 
+    isConnected: isBluetoothConnected, 
+    connect: connectBluetooth, 
+    disconnect: disconnectBluetooth 
+} = useBluetooth()
+
+// 处理蓝牙连接
+async function handleBluetoothConnect() {
+    try {
+        if (isBluetoothConnected.value) {
+            await disconnectBluetooth()
+            // 不显示断开提示
+        } else {
+            await connectBluetooth()
+            // 不显示连接成功提示
+        }
+    } catch (error: any) {
+        console.error('蓝牙操作失败:', error)
+        toast.open({
+            message: `蓝牙连接失败: ${error.message || error}`,
+            type: 'error',
+            position: 'top-right',
+            duration: 3000,
+        })
+    }
+}
+
+// 监听蓝牙触发事件（仅在 Home 页面）
+let lotteryTriggerHandler: (() => void) | null = null
+
+function handleBluetoothLotteryTrigger() {
+    // 触发自定义事件，让 Home 页面处理
+    window.dispatchEvent(new CustomEvent('bluetooth-trigger-lottery'))
+}
+
+watch(() => route?.path, (path) => {
+    if (!path) return
+    
+    // 移除旧的监听器
+    if (lotteryTriggerHandler) {
+        window.removeEventListener('lottery-trigger', lotteryTriggerHandler)
+        lotteryTriggerHandler = null
+    }
+    
+    // 只在 Home 页面添加监听器
+    if (path.includes('/log-lottery') && !path.includes('/config')) {
+        lotteryTriggerHandler = handleBluetoothLotteryTrigger
+        window.addEventListener('lottery-trigger', lotteryTriggerHandler)
+    }
+}, { immediate: true })
 
 const customDialogRef = ref()
 const settingRef = ref()
@@ -50,6 +120,7 @@ watch(() => route, (val) => {
         visible.value = false
     }
 }, { immediate: true })
+
 onMounted(() => {
     if (!settingRef.value) {
         return
@@ -60,6 +131,16 @@ onMounted(() => {
     settingRef.value.addEventListener('mouseleave', () => {
         fullScreenRef.value.style.display = 'none'
     })
+})
+
+onUnmounted(() => {
+    // 清理蓝牙事件监听
+    if (lotteryTriggerHandler) {
+        window.removeEventListener('lottery-trigger', lotteryTriggerHandler)
+        lotteryTriggerHandler = null
+    }
+    // 注意：不在组件卸载时断开蓝牙连接，保持连接持久化
+    // 蓝牙连接应该由用户手动控制断开
 })
 </script>
 
@@ -108,12 +189,23 @@ onMounted(() => {
         <svg-icon name="setting" />
       </div>
     </div>
-    <div class="tooltip tooltip-left" :data-tip="currentMusic.item ? `${currentMusic.item.name}\n\r ${t('tooltip.nextSong')}` : t('tooltip.noSongPlay')">
+    <div class="tooltip tooltip-left" :data-tip="bgmIsPlaying ? '暂停背景音乐' : '播放背景音乐'">
       <div
         class="flex items-center justify-center w-10 h-10 p-0 m-0 cursor-pointer setting-container bg-slate-500/50 rounded-l-xl hover:bg-slate-500/80 hover:text-blue-400/90"
-        @click="playMusic(currentMusic.item)" @click.right.prevent="nextPlay"
+        @click="toggleBackgroundMusic"
       >
-        <svg-icon :name="currentMusic.paused ? 'play' : 'pause'" />
+        <svg-icon :name="bgmIsPlaying ? 'pause' : 'play'" />
+      </div>
+    </div>
+    <div class="tooltip tooltip-left" :data-tip="isBluetoothConnected ? '断开蓝牙连接' : '连接蓝牙按钮'">
+      <div
+        class="flex items-center justify-center w-10 h-10 p-0 m-0 cursor-pointer setting-container bg-slate-500/50 rounded-l-xl hover:bg-slate-500/80 hover:text-blue-400/90"
+        :class="{ 
+          'bg-green-500/50 hover:bg-green-500/80 text-blue-500': isBluetoothConnected 
+        }"
+        @click="handleBluetoothConnect"
+      >
+        <svg-icon name="bluetooth" />
       </div>
     </div>
     <div v-if="serverStatus" class="tooltip tooltip-left" data-tip="访问手机端">

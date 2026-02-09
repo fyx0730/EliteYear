@@ -75,7 +75,8 @@ onUnmounted(() => {
       </ul>
     </div>
     <div class="border-none rounded-2xl bg-base-200 mx-2 p-2 flex flex-col gap-3 items-center justify-center shadow-md mb-8 h-48">
-      <textarea ref="textareaRef" v-model="userInputMsg" class="textarea w-full rounded-xl border-none bg-transparent focus:outline-none focus:ring-0" placeholder="发送弹幕 | 只展示您发送过的弹幕" rows="5" cols="50" @keydown.enter.prevent="handleEnterSend" />
+      <label for="mobile-message-input" class="sr-only">发送弹幕</label>
+      <textarea id="mobile-message-input" name="mobile-message" ref="textareaRef" v-model="userInputMsg" class="textarea w-full rounded-xl border-none bg-transparent focus:outline-none focus:ring-0" placeholder="发送弹幕 | 只展示您发送过的弹幕" rows="5" cols="50" @keydown.enter.prevent="handleEnterSend" />
       <div class="w-full flex justify-end">
         <button class="btn btn-primary w-24 mb-4" @click="handleEnterSend">
           发送

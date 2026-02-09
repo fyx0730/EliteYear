@@ -3,7 +3,7 @@ import { rgba } from '@/utils/color'
 
 interface IUseElementStyle {
     element: any
-    person: IPersonConfig
+    person: IPersonConfig & { originalIndex?: number }
     index: number
     patternList: number[]
     patternColor: string
@@ -13,18 +13,27 @@ interface IUseElementStyle {
     textSize: number
     mod: 'default' | 'lucky' | 'sphere'
     type?: 'add' | 'change'
+    cardOpacity?: number // 卡片透明度 (0-1)
 
 }
 export function useElementStyle(props: IUseElementStyle) {
-    const { element, person, index, patternList, patternColor, cardColor, cardSize, scale, textSize, mod, type } = props
+    const { element, person, index, patternList, patternColor, cardColor, cardSize, scale, textSize, mod, type, cardOpacity = 0.5 } = props
+    // 使用配置的透明度值，允许一定的随机变化
+    const baseOpacity = cardOpacity
+    const opacityVariation = 0.1 // 允许 ±0.1 的随机变化
+    
     if (patternList.includes(index + 1) && mod === 'default') {
-        element.style.backgroundColor = rgba(patternColor, Math.random() * 0.2 + 0.8)
+        // 图案卡片使用较高的透明度
+        element.style.backgroundColor = rgba(patternColor, Math.min(1, baseOpacity + opacityVariation * 2 + Math.random() * 0.2))
     }
     else if (mod === 'sphere' || mod === 'default') {
-        element.style.backgroundColor = rgba(cardColor, Math.random() * 0.5 + 0.25)
+        // 普通卡片使用配置的透明度，允许小幅随机变化
+        const randomVariation = (Math.random() - 0.5) * opacityVariation * 2
+        element.style.backgroundColor = rgba(cardColor, Math.max(0, Math.min(1, baseOpacity + randomVariation)))
     }
     else if (mod === 'lucky') {
-        element.style.backgroundColor = rgba(cardColor, 0.8)
+        // 中奖卡片使用稍高的透明度
+        element.style.backgroundColor = rgba(cardColor, Math.min(1, baseOpacity + 0.3))
     }
     element.style.border = `1px solid ${rgba(cardColor, 0.25)}`
     element.style.boxShadow = `0 0 12px ${rgba(cardColor, 0.5)}`
@@ -48,23 +57,31 @@ export function useElementStyle(props: IUseElementStyle) {
             target.style.boxShadow = `0 0 12px ${rgba(cardColor, 0.5)}`
         })
     }
-    element.children[0].style.fontSize = `${textSize * scale * 0.5}px`
-    if (person.uid) {
-        element.children[0].textContent = person.uid
-    }
+    // 优化编号：增大字体并居中显示
+    element.children[0].style.fontSize = `${textSize * scale * 0.65}px`
+    element.children[0].style.lineHeight = `${textSize * scale * 0.8}px`
+    element.children[0].style.textAlign = 'center'
+    // 使用 originalIndex + 1 作为编号，对应人员在 allPersonList 中的位置
+    // 如果没有 originalIndex，则使用 index + 1 作为后备方案
+    const originalIndex = person.originalIndex !== undefined ? person.originalIndex : index
+    element.children[0].textContent = (originalIndex + 1).toString()
 
+    // 主名称：使用更合理的行高比例（1.3-1.5倍字体大小）
     element.children[1].style.fontSize = `${textSize * scale}px`
-    element.children[1].style.lineHeight = `${textSize * scale * 3}px`
+    element.children[1].style.lineHeight = `${textSize * scale * 1.4}px`
     element.children[1].style.textShadow = `0 0 12px ${rgba(cardColor, 0.95)}`
+    element.children[1].style.letterSpacing = '0.02em'
     if (person.name) {
         element.children[1].textContent = person.name
     }
 
+    // 详细信息：使用更合理的行高
     element.children[2].style.fontSize = `${textSize * scale * 0.5}px`
-    // 设置部门和身份的默认值
+    element.children[2].style.lineHeight = `${textSize * scale * 0.75}px`
+    // 只显示部门，不显示身份
     element.children[2].innerHTML = ''
-    if (person.department || person.identity) {
-        element.children[2].innerHTML = `${person.department ? person.department : ''}<br/>${person.identity ? person.identity : ''}`
+    if (person.department) {
+        element.children[2].innerHTML = person.department
     }
     element.children[3].src = person.avatar
     return element
@@ -260,7 +277,72 @@ const cardRule: CardRule = {
     },
 }
 /**
- * @description 设置抽中卡片的位置
+ * @description 动态生成卡片布局规则（用于超过30人的情况）
+ */
+function generateCardRule(totalCount: number): { scale: number, rule: number[], length: number } {
+    // 如果已有规则，直接返回
+    if (cardRule[totalCount]) {
+        const rule = cardRule[totalCount]
+        return { scale: rule.scale, rule: rule.rule, length: rule.length }
+    }
+
+    // 动态生成规则
+    let scale = 1.0
+    let rule: number[] = []
+    let length = 1
+
+    if (totalCount <= 5) {
+        // 1-5人：单行
+        scale = 2.0
+        rule = [totalCount]
+        length = 1
+    } else if (totalCount <= 10) {
+        // 6-10人：两行，尽量平均分配
+        scale = 2.0
+        const firstRow = Math.ceil(totalCount / 2)
+        rule = [firstRow, totalCount - firstRow]
+        length = 2
+    } else if (totalCount <= 20) {
+        // 11-20人：两行或三行
+        scale = 1.5
+        if (totalCount <= 15) {
+            const firstRow = Math.ceil(totalCount / 2)
+            rule = [firstRow, totalCount - firstRow]
+            length = 2
+        } else {
+            const perRow = Math.ceil(totalCount / 3)
+            rule = [perRow, perRow, totalCount - perRow * 2]
+            length = 3
+        }
+    } else if (totalCount <= 30) {
+        // 21-30人：三行
+        scale = 1.2
+        const perRow = Math.ceil(totalCount / 3)
+        rule = [perRow, perRow, totalCount - perRow * 2]
+        length = 3
+    } else {
+        // 超过30人：多行布局
+        scale = Math.max(0.8, 1.2 - (totalCount - 30) * 0.02) // 根据人数动态调整缩放
+        const rows = Math.ceil(Math.sqrt(totalCount * 1.5)) // 计算合适的行数
+        const perRow = Math.ceil(totalCount / rows)
+        rule = []
+        let remaining = totalCount
+        for (let i = 0; i < rows; i++) {
+            if (i === rows - 1) {
+                rule.push(remaining)
+            } else {
+                rule.push(perRow)
+                remaining -= perRow
+            }
+        }
+        length = rows
+    }
+
+    return { scale, rule, length }
+}
+
+/**
+ * @description 设置抽中卡片的位置（动态居中）
  */
 export function useElementPosition(
     element: any,
@@ -274,19 +356,16 @@ export function useElementPosition(
     yTable: number
     scale: number
 } {
-    let xTable = 0
-    let yTable = 0
-    const centerPosition = {
-        x: 0,
-        y: windowSize.height / 2,
-    }
-    const { scale, rule, length } = cardRule[totalCount]
+    // 获取布局规则（支持动态生成）
+    const { scale, rule, length } = generateCardRule(totalCount)
+    
     // 计算缩放后的卡片尺寸
     const scaledCardWidth = cardSize.width * scale
     const scaledCardHeight = cardSize.height * scale
+    
     // 计算当前卡片在第几行（从0开始）
     let currentRow = 0
-    let cardIndexInRow = cardIndex // 当前卡片在其所在行中的索引
+    let cardIndexInRow = cardIndex
 
     // 根据规则确定卡片在哪一行及行内索引
     let cumulativeCount = 0
@@ -302,22 +381,29 @@ export function useElementPosition(
     // 计算当前行的卡片数量
     const cardsInCurrentRow = rule[currentRow]
 
-    // 计算每行的垂直中心位置
+    // 在 Three.js CSS3DRenderer 中，坐标系统以屏幕中心为原点 (0, 0)
+    // X轴：左负右正，Y轴：上正下负（或上负下正，取决于相机设置）
+    // 我们需要计算相对于屏幕中心的偏移量
+
+    // 计算垂直方向：整体高度和每行的垂直间距
     const verticalSpacing = scaledCardHeight * 1.1 // 垂直间距基于缩放后的高度
-    // 计算整体高度并调整居中
-    const totalHeight = (length - 1) * verticalSpacing + scaledCardHeight // 包含卡片本身的高度
-    const centerYOffset = -totalHeight / 2
+    const totalHeight = (length - 1) * verticalSpacing + scaledCardHeight // 整体高度
+    
+    // 计算垂直位置：从屏幕中心(0)开始
+    // 在 CSS3DRenderer 中，Y轴通常是上正下负（或上负下正，取决于相机）
+    // 为了居中显示，我们需要计算相对于屏幕中心的偏移
+    // 第一行应该在中心上方，所以使用负值
+    const startY = -totalHeight / 2 + scaledCardHeight / 2
+    const yTable = startY + currentRow * verticalSpacing
 
-    // 修改此处逻辑，确保当length=2时，两行围绕中心点对称分布
-    centerPosition.y = windowSize.height / 2 - totalHeight / 2
-
-    yTable = centerPosition.y + currentRow * verticalSpacing + centerYOffset + scaledCardHeight / 2 // 添加卡片高度的一半作为修正
-    // 计算当前行的水平居中偏移
+    // 计算水平方向：当前行的宽度和水平间距
     const horizontalSpacing = scaledCardWidth * 1.2 // 水平间距基于缩放后的宽度
     const rowWidth = (cardsInCurrentRow - 1) * horizontalSpacing
-    const offsetX = -rowWidth / 2 // 行内水平居中
 
-    xTable = centerPosition.x + offsetX + cardIndexInRow * horizontalSpacing
+    // 计算水平位置：从屏幕中心(0)开始，向左偏移行宽度的一半，然后加上当前卡片的偏移
+    // 当只有1个卡片时，rowWidth = 0，所以 xTable = 0（屏幕中心）
+    const startX = -rowWidth / 2
+    const xTable = startX + cardIndexInRow * horizontalSpacing
 
     return { xTable, yTable, scale }
 }

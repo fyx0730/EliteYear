@@ -45,19 +45,19 @@ function handleClose() {
       <div class="fixed inset-0 bg-black/30" aria-hidden="true" />
       <!-- Full-screen container to center the panel -->
       <div class="fixed inset-0 flex w-screen items-center justify-center p-4">
-        <DialogPanel class="max-w-sm rounded bg-base-100 w-9/10 p-6 shadow-md">
-          <DialogTitle class="font-bold text-lg">
-            <p class="w-full flex items-center gap-2">
+        <DialogPanel class="max-w-sm rounded w-9/10 p-6 shadow-md text-center">
+          <DialogTitle class="font-bold text-lg text-center">
+            <p class="w-full flex items-center justify-center gap-2">
               <CircleAlert class="text-red-500" />
               <span>
                 {{ title || '提示' }}
               </span>
             </p>
           </DialogTitle>
-          <DialogDescription class="py-4">
+          <DialogDescription class="py-4 text-center">
             {{ desc }}
           </DialogDescription>
-          <div class="mr-4 mt-4 flex justify-end">
+          <div class="mt-4 flex justify-center">
             <button class="btn" @click="handleClose">
               确定
             </button>

@@ -6,12 +6,14 @@ import { storeToRefs } from 'pinia'
 import { PerspectiveCamera, Scene } from 'three'
 import { CSS3DObject, CSS3DRenderer } from 'three-css3d'
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useToast } from 'vue-toast-notification'
 import dongSound from '@/assets/audio/end.mp3'
 import enterAudio from '@/assets/audio/enter.wav'
 import worldCupAudio from '@/assets/audio/worldcup.mp3'
 import { SINGLE_TIME_MAX_PERSON_COUNT } from '@/constant/config'
+import { useBackgroundMusicInstance } from '@/hooks/useBackgroundMusicInstance'
+import { useBluetooth } from '@/hooks/useBluetooth'
 import { useElementPosition, useElementStyle } from '@/hooks/useElement'
 import i18n from '@/locales/i18n'
 import useStore from '@/store'
@@ -45,6 +47,7 @@ export function useViewModel() {
         getTitleFontSyncGlobal: titleFontSyncGlobal,
         getDefiniteTime: definiteTime,
         getWinMusic: isPlayWinMusic,
+        getCardOpacity: cardOpacity,
     } = storeToRefs(globalConfig)
     // three初始值
     const ballRotationY = ref(0)
@@ -72,10 +75,16 @@ export function useViewModel() {
     const intervalTimer = ref<any>(null)
     const isInitialDone = ref<boolean>(false)
     const animationFrameId = ref<any>(null)
+    // 跟踪每个卡牌索引对应的人员ID，确保不重复显示
+    const cardToPersonMap = ref<Map<number, number>>(new Map())
     const playingAudios = ref<HTMLAudioElement[]>([])
 
     // 抽奖音乐相关
     const lotteryMusic = ref<HTMLAudioElement | null>(null)
+
+    // 背景音乐管理器（使用全局实例）
+    const bgmController = useBackgroundMusicInstance()
+    const { startBGM, stopBGM, fadeIn: fadeInBGM, fadeOut: fadeOutBGM, pauseBGM, onUserInteraction: bgmUserInteraction } = bgmController
 
     function initThreeJs() {
         const felidView = 40
@@ -107,13 +116,17 @@ export function useViewModel() {
         controls.value.addEventListener('change', render)
 
         const tableLen = tableData.value.length
+        // 初始化卡牌到人员的映射
+        cardToPersonMap.value.clear()
         for (let i = 0; i < tableLen; i++) {
             let element = document.createElement('div')
             element.className = 'element-card'
 
             const number = document.createElement('div')
             number.className = 'card-id'
-            number.textContent = tableData.value[i].uid
+            // 使用 originalIndex + 1 作为编号，对应人员在 allPersonList 中的位置
+            const originalIndex = tableData.value[i].originalIndex !== undefined ? tableData.value[i].originalIndex : i
+            number.textContent = (originalIndex + 1).toString()
             if (isShowAvatar.value)
                 number.style.display = 'none'
             element.appendChild(number)
@@ -127,7 +140,7 @@ export function useViewModel() {
 
             const detail = document.createElement('div')
             detail.className = 'card-detail'
-            detail.innerHTML = `${tableData.value[i].department}<br/>${tableData.value[i].identity}`
+            detail.innerHTML = `${tableData.value[i].department}`
             if (isShowAvatar.value)
                 detail.style.display = 'none'
             element.appendChild(detail)
@@ -158,6 +171,7 @@ export function useViewModel() {
                 scale: 1,
                 textSize: textSize.value,
                 mod: 'default',
+                cardOpacity: cardOpacity.value,
             },
             )
             const object = new CSS3DObject(element)
@@ -167,6 +181,10 @@ export function useViewModel() {
             scene.value.add(object)
 
             objects.value.push(object)
+            // 记录卡牌索引对应的人员ID
+            if (tableData.value[i] && tableData.value[i].id) {
+                cardToPersonMap.value.set(i, tableData.value[i].id)
+            }
         }
         // 创建横铺的界面
         const tableVertices = createTableVertices({ tableData: tableData.value, rowCount: rowCount.value, cardSize: cardSize.value })
@@ -198,9 +216,30 @@ export function useViewModel() {
 
         return new Promise((resolve) => {
             const objLength = objects.value.length
-            for (let i = 0; i < objLength; ++i) {
+            const targetLength = targets.length
+            
+            // 检查数组长度是否匹配
+            if (objLength !== targetLength) {
+                console.warn(`Objects length (${objLength}) doesn't match targets length (${targetLength}), using minimum length`)
+            }
+            
+            const minLength = Math.min(objLength, targetLength)
+            
+            for (let i = 0; i < minLength; ++i) {
                 const object = objects.value[i]
                 const target = targets[i]
+                
+                // 安全检查：确保 object 和 target 都存在且有 position 和 rotation 属性
+                if (!object || !object.position || !object.rotation) {
+                    console.warn(`Object at index ${i} is invalid, skipping animation`)
+                    continue
+                }
+                
+                if (!target || !target.position || !target.rotation) {
+                    console.warn(`Target at index ${i} is invalid, skipping animation`)
+                    continue
+                }
+                
                 new TWEEN.Tween(object.position)
                     .to({ x: target.position.x, y: target.position.y, z: target.position.z }, Math.random() * duration + duration)
                     .easing(TWEEN.Easing.Exponential.InOut)
@@ -214,24 +253,33 @@ export function useViewModel() {
                         if (luckyCardList.value.length) {
                             luckyCardList.value.forEach((cardIndex: any) => {
                                 const item = objects.value[cardIndex]
-                                useElementStyle({
-                                    element: item.element,
-                                    person: {} as any,
-                                    index: i,
-                                    patternList: patternList.value,
-                                    patternColor: patternColor.value,
-                                    cardColor: cardColor.value,
-                                    cardSize: cardSize.value,
-                                    scale: 1,
-                                    textSize: textSize.value,
-                                    mod: 'sphere',
-                                })
+                                if (item && item.element) {
+                                    useElementStyle({
+                                        element: item.element,
+                                        person: {} as any,
+                                        index: i,
+                                        patternList: patternList.value,
+                                        patternColor: patternColor.value,
+                                        cardColor: cardColor.value,
+                                        cardSize: cardSize.value,
+                                        scale: 1,
+                                        textSize: textSize.value,
+                                        mod: 'sphere',
+                                        cardOpacity: cardOpacity.value,
+                                    })
+                                }
                             })
                         }
                         luckyTargets.value = []
                         luckyCardList.value = []
                         canOperate.value = true
                     })
+            }
+            
+            // 如果没有任何有效的动画，立即 resolve
+            if (minLength === 0) {
+                resolve(undefined)
+                return
             }
 
             // 这个补间用来在位置与旋转补间同步执行，通过onUpdate在每次更新数据后渲染scene和camera
@@ -450,6 +498,8 @@ export function useViewModel() {
             return
         }
 
+        // 进入抽奖时保留背景音乐，不淡出
+
         // 重置音频状态
         resetAudioState()
 
@@ -470,7 +520,7 @@ export function useViewModel() {
         if (patternList.value.length) {
             for (let i = 0; i < patternList.value.length; i++) {
                 if (i < rowCount.value * 7) {
-                    objects.value[patternList.value[i] - 1].element.style.backgroundColor = rgba(cardColor.value, Math.random() * 0.5 + 0.25)
+                    objects.value[patternList.value[i] - 1].element.style.backgroundColor = rgba(cardColor.value, Math.max(0, Math.min(1, cardOpacity.value + (Math.random() - 0.5) * 0.1)))
                 }
             }
         }
@@ -542,11 +592,24 @@ export function useViewModel() {
             duration: 8000,
         })
 
+        // 点击开始抽奖后，立即停止背景音乐（避免与抽奖音乐重叠）
+        pauseBGM()
+
         // 开始播放抽奖音乐
         startLotteryMusic()
 
         currentStatus.value = LotteryStatus.running
         rollBall(10, 3000)
+        
+        // 球体进入快速转动后，发送状态到蓝牙设备
+        sendBluetoothData('running')
+            .then(() => {
+                // 发送成功，不显示提示
+            })
+            .catch((error: any) => {
+                console.error('发送蓝牙状态失败:', error)
+                // 不显示错误提示，避免干扰用户体验
+            })
         if (definiteTime.value) {
             setTimeout(() => {
                 if (currentStatus.value === LotteryStatus.running) {
@@ -587,6 +650,9 @@ export function useViewModel() {
                 windowSize,
                 index,
             )
+            // 找到中奖人员在 allPersonList 中的索引
+            const originalIndex = allPersonList.value.findIndex(p => p.id === person.id)
+            const personWithIndex = { ...person, originalIndex: originalIndex >= 0 ? originalIndex : cardIndex }
             new TWEEN.Tween(item.position)
                 .to({
                     x: xTable,
@@ -597,7 +663,7 @@ export function useViewModel() {
                 .onStart(() => {
                     item.element = useElementStyle({
                         element: item.element,
-                        person,
+                        person: personWithIndex,
                         index: cardIndex,
                         patternList: patternList.value,
                         patternColor: patternColor.value,
@@ -606,6 +672,7 @@ export function useViewModel() {
                         scale,
                         textSize: textSize.value,
                         mod: 'lucky',
+                        cardOpacity: cardOpacity.value,
                     })
                 })
                 .start()
@@ -632,6 +699,10 @@ export function useViewModel() {
     // 播放音频，中将卡片越多audio对象越多，声音越大
     function playWinMusic() {
         if (!isPlayWinMusic.value) {
+            // 即使不播放中奖音效，也要在延迟后恢复背景音乐
+            setTimeout(() => {
+                fadeInBGM(1000)
+            }, 500)
             return
         }
         // 清理已结束的音频
@@ -639,6 +710,10 @@ export function useViewModel() {
 
         if (playingAudios.value.length > maxAudioLimit) {
             console.log('音频播放数量已达到上限，请勿重复播放')
+            // 即使达到上限，也要恢复背景音乐
+            setTimeout(() => {
+                fadeInBGM(1000)
+            }, 500)
             return
         }
 
@@ -648,29 +723,39 @@ export function useViewModel() {
         playingAudios.value.push(enterNewAudio)
         enterNewAudio.play()
             .then(() => {
-                // 当音频播放结束后，从数组中移除
+                // 当音频播放结束后，从数组中移除，并恢复背景音乐
                 enterNewAudio.onended = () => {
                     const index = playingAudios.value.indexOf(enterNewAudio)
                     if (index > -1) {
                         playingAudios.value.splice(index, 1)
                     }
+                    // enter.wav 播放完成后，淡入背景音乐
+                    fadeInBGM(1000)
                 }
             })
             .catch((error) => {
                 console.error('播放音频失败:', error)
-                // 如果播放失败，也从数组中移除
+                // 如果播放失败，也从数组中移除，并恢复背景音乐
                 const index = playingAudios.value.indexOf(enterNewAudio)
                 if (index > -1) {
                     playingAudios.value.splice(index, 1)
                 }
+                // 播放失败时也恢复背景音乐
+                setTimeout(() => {
+                    fadeInBGM(1000)
+                }, 500)
             })
 
-        // 播放错误时从数组中移除
+        // 播放错误时从数组中移除，并恢复背景音乐
         enterNewAudio.onerror = () => {
             const index = playingAudios.value.indexOf(enterNewAudio)
             if (index > -1) {
                 playingAudios.value.splice(index, 1)
             }
+            // 播放错误时也恢复背景音乐
+            setTimeout(() => {
+                fadeInBGM(1000)
+            }, 500)
         }
     }
     /**
@@ -680,6 +765,10 @@ export function useViewModel() {
         if (!canOperate.value) {
             return
         }
+        
+        // 点击继续按钮后，背景音乐淡入
+        fadeInBGM(1000)
+        
         const customCount = currentPrize.value.separateCount
         if (customCount && customCount.enable && customCount.countList.length > 0) {
             for (let i = 0; i < customCount.countList.length; i++) {
@@ -697,6 +786,46 @@ export function useViewModel() {
         }
         personConfig.addAlreadyPersonList(luckyTargets.value, currentPrize.value)
         prizeConfig.updatePrizeConfig(currentPrize.value)
+        
+        // 恢复所有中奖卡牌的内容为 tableData 中对应的人员信息
+        // 确保编号、姓名、部门一一对应
+        if (luckyCardList.value.length > 0) {
+            // 重新初始化 tableData，确保使用最新的人员列表
+            tableData.value = initTableData({ allPersonList: allPersonList.value, rowCount: rowCount.value })
+            
+            // 恢复所有中奖卡牌的内容
+            luckyCardList.value.forEach((cardIndex: number) => {
+                if (cardIndex >= 0 && cardIndex < tableData.value.length && cardIndex < objects.value.length) {
+                    const person = tableData.value[cardIndex]
+                    // 确保 originalIndex 正确
+                    const originalIndex = person.originalIndex !== undefined ? person.originalIndex : cardIndex
+                    const personWithIndex = { ...person, originalIndex }
+                    
+                    // 恢复卡牌内容为 tableData 中对应的人员信息
+                    objects.value[cardIndex].element = useElementStyle({
+                        element: objects.value[cardIndex].element,
+                        person: personWithIndex,
+                        index: cardIndex,
+                        patternList: patternList.value,
+                        patternColor: patternColor.value,
+                        cardColor: cardColor.value,
+                        cardSize: { width: cardSize.value.width, height: cardSize.value.height },
+                        scale: 1,
+                        textSize: textSize.value,
+                        mod: 'default',
+                        cardOpacity: cardOpacity.value,
+                    })
+                    
+                    // 更新映射
+                    if (person && person.id) {
+                        cardToPersonMap.value.set(cardIndex, person.id)
+                    }
+                }
+            })
+            // 清空中奖卡牌列表
+            luckyCardList.value = []
+        }
+        
         await enterLottery()
     }
     /**
@@ -705,6 +834,48 @@ export function useViewModel() {
     function quitLottery() {
         // 停止抽奖音乐
         stopLotteryMusic()
+
+        // 放弃抽奖时，恢复背景音乐
+        fadeInBGM(1000)
+
+        // 恢复所有中奖卡牌的内容为 tableData 中对应的人员信息
+        // 确保编号、姓名、部门一一对应
+        if (luckyCardList.value.length > 0) {
+            // 重新初始化 tableData，确保使用最新的人员列表
+            tableData.value = initTableData({ allPersonList: allPersonList.value, rowCount: rowCount.value })
+            
+            // 恢复所有中奖卡牌的内容
+            luckyCardList.value.forEach((cardIndex: number) => {
+                if (cardIndex >= 0 && cardIndex < tableData.value.length && cardIndex < objects.value.length) {
+                    const person = tableData.value[cardIndex]
+                    // 确保 originalIndex 正确
+                    const originalIndex = person.originalIndex !== undefined ? person.originalIndex : cardIndex
+                    const personWithIndex = { ...person, originalIndex }
+                    
+                    // 恢复卡牌内容为 tableData 中对应的人员信息
+                    objects.value[cardIndex].element = useElementStyle({
+                        element: objects.value[cardIndex].element,
+                        person: personWithIndex,
+                        index: cardIndex,
+                        patternList: patternList.value,
+                        patternColor: patternColor.value,
+                        cardColor: cardColor.value,
+                        cardSize: { width: cardSize.value.width, height: cardSize.value.height },
+                        scale: 1,
+                        textSize: textSize.value,
+                        mod: 'default',
+                        cardOpacity: cardOpacity.value,
+                    })
+                    
+                    // 更新映射
+                    if (person && person.id) {
+                        cardToPersonMap.value.set(cardIndex, person.id)
+                    }
+                }
+            })
+            // 清空中奖卡牌列表
+            luckyCardList.value = []
+        }
 
         enterLottery()
         currentStatus.value = LotteryStatus.init
@@ -721,23 +892,85 @@ export function useViewModel() {
             const indexLength = 4
             const cardRandomIndexArr: number[] = []
             const personRandomIndexArr: number[] = []
+            
+            // 使用 Set 来跟踪已选择的卡牌和人员，避免重复
+            const usedCardIndices = new Set<number>()
+            const usedPersonIndices = new Set<number>()
+            
+            // 从映射中收集当前所有卡牌上显示的人员ID，确保实时准确
+            const currentlyDisplayedPersonIds = new Set<number>()
+            cardToPersonMap.value.forEach((personId, cardIdx) => {
+                // 跳过中奖卡牌
+                if (!luckyCardList.value.includes(cardIdx)) {
+                    currentlyDisplayedPersonIds.add(personId)
+                }
+            })
+            
             for (let i = 0; i < indexLength; i++) {
-                // 解决随机元素概率过于不均等问题
-                const randomCardIndex = Math.floor(Math.random() * (tableData.value.length - 1))
-                const randomPersonIndex = Math.floor(Math.random() * (allPersonList.value.length - 1))
-                if (luckyCardList.value.includes(randomCardIndex)) {
+                let randomCardIndex: number
+                let randomPersonIndex: number
+                let cardAttempts = 0
+                let personAttempts = 0
+                const maxAttempts = 100 // 防止无限循环
+                
+                // 确保卡牌索引不重复且不在中奖列表中
+                do {
+                    randomCardIndex = Math.floor(Math.random() * (tableData.value.length - 1))
+                    cardAttempts++
+                } while (
+                    (usedCardIndices.has(randomCardIndex) || 
+                     luckyCardList.value.includes(randomCardIndex)) && 
+                    cardAttempts < maxAttempts &&
+                    tableData.value.length > usedCardIndices.size + luckyCardList.value.length
+                )
+                
+                // 确保人员索引不重复，且不在当前显示的卡牌上
+                do {
+                    randomPersonIndex = Math.floor(Math.random() * (allPersonList.value.length - 1))
+                    personAttempts++
+                    const selectedPerson = allPersonList.value[randomPersonIndex]
+                    // 检查：1. 人员索引不重复 2. 人员ID不在当前显示的卡牌上
+                    if (selectedPerson && currentlyDisplayedPersonIds.has(selectedPerson.id)) {
+                        // 如果这个人员已经在其他卡牌上显示，继续寻找
+                        continue
+                    }
+                } while (
+                    (usedPersonIndices.has(randomPersonIndex) || 
+                     (allPersonList.value[randomPersonIndex] && currentlyDisplayedPersonIds.has(allPersonList.value[randomPersonIndex].id))) && 
+                    personAttempts < maxAttempts &&
+                    allPersonList.value.length > usedPersonIndices.size
+                )
+                
+                // 如果达到最大尝试次数仍未找到，跳过本次循环
+                if (cardAttempts >= maxAttempts || personAttempts >= maxAttempts) {
                     continue
                 }
+                
+                const selectedPerson = allPersonList.value[randomPersonIndex]
+                if (!selectedPerson) {
+                    continue
+                }
+                
+                usedCardIndices.add(randomCardIndex)
+                usedPersonIndices.add(randomPersonIndex)
+                // 将新选择的人员ID添加到已显示集合中
+                currentlyDisplayedPersonIds.add(selectedPerson.id)
                 cardRandomIndexArr.push(randomCardIndex)
                 personRandomIndexArr.push(randomPersonIndex)
             }
+            
             for (let i = 0; i < cardRandomIndexArr.length; i++) {
                 if (!objects.value[cardRandomIndexArr[i]]) {
                     continue
                 }
+                // personRandomIndexArr[i] 就是该人员在 allPersonList 中的 originalIndex
+                const person = allPersonList.value[personRandomIndexArr[i]]
+                const personWithIndex = { ...person, originalIndex: personRandomIndexArr[i] }
+                
+                // 更新卡牌显示
                 objects.value[cardRandomIndexArr[i]].element = useElementStyle({
                     element: objects.value[cardRandomIndexArr[i]].element,
-                    person: allPersonList.value[personRandomIndexArr[i]],
+                    person: personWithIndex,
                     index: cardRandomIndexArr[i],
                     patternList: patternList.value,
                     patternColor: patternColor.value,
@@ -747,7 +980,11 @@ export function useViewModel() {
                     scale: 1,
                     mod,
                     type: 'change',
+                    cardOpacity: cardOpacity.value,
                 })
+                
+                // 更新映射：记录这个卡牌现在显示的人员ID
+                cardToPersonMap.value.set(cardRandomIndexArr[i], person.id)
             }
         }, 200)
     }
@@ -755,30 +992,61 @@ export function useViewModel() {
      * @description: 键盘监听，快捷键操作
      */
     function listenKeyboard(e: any) {
-        if ((e.keyCode !== 32 || e.keyCode !== 27) && !canOperate.value) {
-            return
-        }
+        // ESC 键处理
         if (e.keyCode === 27 && currentStatus.value === LotteryStatus.running) {
             quitLottery()
-        }
-        if (e.keyCode !== 32) {
             return
         }
-        switch (currentStatus.value) {
-            case LotteryStatus.init:
-                enterLottery()
-                break
-            case LotteryStatus.ready:
-                startLottery()
-                break
-            case LotteryStatus.running:
-                stopLottery()
-                break
-            case LotteryStatus.end:
-                continueLottery()
-                break
-            default:
-                break
+        
+        // 空格键处理
+        if (e.keyCode === 32) {
+            // 空格键：发送 "init" 消息到 MicroBlocks
+            // 直接尝试发送，让 sendData 函数内部检查连接状态
+            sendBluetoothData('init')
+                .then(() => {
+                    // 发送成功，不显示提示
+                })
+                .catch((error: any) => {
+                    console.error('发送蓝牙消息失败:', error)
+                    const errorMessage = error?.message || error?.toString() || '未知错误'
+                    if (errorMessage.includes('设备未连接') || errorMessage.includes('未连接')) {
+                        toast.open({
+                            message: '蓝牙设备未连接或连接已断开。请先点击右上角蓝牙按钮连接设备。',
+                            type: 'warning',
+                            position: 'top-right',
+                            duration: 3000,
+                        })
+                    } else {
+                        toast.open({
+                            message: `发送失败: ${errorMessage}`,
+                            type: 'error',
+                            position: 'top-right',
+                            duration: 3000,
+                        })
+                    }
+                })
+            
+            // 原有的空格键功能保持不变（需要 canOperate 检查）
+            if (!canOperate.value) {
+                return
+            }
+            
+            switch (currentStatus.value) {
+                case LotteryStatus.init:
+                    enterLottery()
+                    break
+                case LotteryStatus.ready:
+                    startLottery()
+                    break
+                case LotteryStatus.running:
+                    stopLottery()
+                    break
+                case LotteryStatus.end:
+                    continueLottery()
+                    break
+                default:
+                    break
+            }
         }
     }
     /**
@@ -884,16 +1152,193 @@ export function useViewModel() {
 
         checkAndInit()
     }
+    // 监听用户交互事件，用于触发背景音乐播放
+    function setupUserInteractionListener() {
+        const events = ['click', 'touchstart', 'keydown']
+        const handleInteraction = () => {
+            bgmUserInteraction()
+            // 移除所有事件监听器（只需要一次交互）
+            events.forEach(event => {
+                document.removeEventListener(event, handleInteraction)
+            })
+        }
+        
+        events.forEach(event => {
+            document.addEventListener(event, handleInteraction, { once: true, passive: true })
+        })
+    }
+
+    // 监听卡片透明度变化，实时更新所有卡片
+    watch(cardOpacity, (newOpacity) => {
+        if (!objects.value || objects.value.length === 0) {
+            return
+        }
+        
+        const baseOpacity = newOpacity ?? 0.5
+        const opacityVariation = 0.1
+        
+        objects.value.forEach((object, index) => {
+            if (object.element) {
+                const element = object.element
+                const isPattern = patternList.value.includes(index + 1)
+                
+                if (isPattern) {
+                    // 图案卡片使用较高的透明度
+                    const patternOpacity = Math.min(1, baseOpacity + opacityVariation * 2 + Math.random() * 0.2)
+                    element.style.backgroundColor = rgba(patternColor.value, patternOpacity)
+                } else {
+                    // 普通卡片使用配置的透明度，允许小幅随机变化
+                    const randomVariation = (Math.random() - 0.5) * opacityVariation * 2
+                    const cardOpacityValue = Math.max(0, Math.min(1, baseOpacity + randomVariation))
+                    element.style.backgroundColor = rgba(cardColor.value, cardOpacityValue)
+                }
+            }
+        })
+    }, { immediate: false })
+
+    // 蓝牙相关功能
+    const { 
+        isConnected: isBluetoothConnected, 
+        connect: connectBluetooth, 
+        disconnect: disconnectBluetooth,
+        receivedMessages: bluetoothMessages,
+        sendData: sendBluetoothData
+    } = useBluetooth()
+
+    // 处理蓝牙触发抽奖（兼容旧版本，根据当前状态自动判断）
+    function handleBluetoothTrigger() {
+        // 只有在 ready 状态时才触发抽奖
+        if (currentStatus.value === LotteryStatus.ready) {
+            startLottery()
+            toast.open({
+                message: '蓝牙按钮触发抽奖',
+                type: 'success',
+                position: 'top-right',
+                duration: 2000,
+            })
+        } else if (currentStatus.value === LotteryStatus.running) {
+            // 如果正在抽奖，可以触发停止
+            stopLottery()
+            toast.open({
+                message: '蓝牙按钮停止抽奖',
+                type: 'info',
+                position: 'top-right',
+                duration: 2000,
+            })
+        } else {
+            toast.open({
+                message: `当前状态无法触发抽奖（状态：${currentStatus.value}）`,
+                type: 'warning',
+                position: 'top-right',
+                duration: 2000,
+            })
+        }
+    }
+
+    // 处理蓝牙状态特定动作
+    function handleBluetoothAction(event: CustomEvent) {
+        const { action, message } = event.detail
+        
+        switch (action) {
+            case 'enter':
+                // 1. 进入抽奖（init/end → ready）
+                if (currentStatus.value === LotteryStatus.init || currentStatus.value === LotteryStatus.end) {
+                    enterLottery()
+                    toast.open({
+                        message: `蓝牙消息 "${message}"：进入抽奖`,
+                        type: 'success',
+                        position: 'top-right',
+                        duration: 2000,
+                    })
+                } else {
+                    toast.open({
+                        message: `当前状态无法执行"进入抽奖"操作（状态：${currentStatus.value}）`,
+                        type: 'warning',
+                        position: 'top-right',
+                        duration: 2000,
+                    })
+                }
+                break
+                
+            case 'start':
+                // 2. 开始抽奖（ready → running）
+                if (currentStatus.value === LotteryStatus.ready) {
+                    startLottery()
+                    // 不显示成功提示
+                } else {
+                    toast.open({
+                        message: `当前状态无法执行"开始抽奖"操作（状态：${currentStatus.value}）`,
+                        type: 'warning',
+                        position: 'top-right',
+                        duration: 2000,
+                    })
+                }
+                break
+                
+            case 'stop':
+                // 3. 抽取幸运儿（running → end）
+                if (currentStatus.value === LotteryStatus.running) {
+                    stopLottery()
+                    // 不显示成功提示
+                } else {
+                    toast.open({
+                        message: `当前状态无法执行"抽取幸运儿"操作（状态：${currentStatus.value}）`,
+                        type: 'warning',
+                        position: 'top-right',
+                        duration: 2000,
+                    })
+                }
+                break
+                
+            case 'continue':
+                // 4. 继续（end → ready）
+                if (currentStatus.value === LotteryStatus.end) {
+                    continueLottery()
+                    // 不显示成功提示
+                } else {
+                    toast.open({
+                        message: `当前状态无法执行"继续"操作（状态：${currentStatus.value}）`,
+                        type: 'warning',
+                        position: 'top-right',
+                        duration: 2000,
+                    })
+                }
+                break
+                
+            default:
+                console.warn('未知的蓝牙动作:', action)
+        }
+    }
+
     onMounted(() => {
         init()
+        // 设置用户交互监听
+        setupUserInteractionListener()
+        // 尝试自动播放背景音乐（可能会被浏览器阻止，等待用户交互）
+        setTimeout(() => {
+            startBGM()
+        }, 1000)
+        // 监听蓝牙触发事件（兼容旧版本）
+        window.addEventListener('lottery-trigger', handleBluetoothTrigger)
+        // 监听来自 RightButton 的蓝牙触发事件
+        window.addEventListener('bluetooth-trigger-lottery', handleBluetoothTrigger)
+        // 监听蓝牙状态特定动作事件
+        window.addEventListener('lottery-action', handleBluetoothAction as EventListener)
     })
+
     onUnmounted(() => {
         nextTick(() => {
             cleanup()
         })
         clearInterval(intervalTimer.value)
+        // 注意：不在这里停止背景音乐，因为背景音乐应该在全局范围内持续播放
+        // 背景音乐由 useBackgroundMusicInstance 全局管理，不应该因为页面切换而停止
         intervalTimer.value = null
         window.removeEventListener('keydown', listenKeyboard)
+        // 清理蓝牙事件监听（不在这里断开连接，因为蓝牙连接在 RightButton 中管理）
+        window.removeEventListener('lottery-trigger', handleBluetoothTrigger)
+        window.removeEventListener('bluetooth-trigger-lottery', handleBluetoothTrigger)
+        window.removeEventListener('lottery-action', handleBluetoothAction as EventListener)
     })
 
     return {

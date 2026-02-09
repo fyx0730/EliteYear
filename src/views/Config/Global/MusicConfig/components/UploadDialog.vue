@@ -105,7 +105,8 @@ watch(visible, (newVal) => {
     <template #content>
       <div class="flex flex-col items-center gap-6 w-full px-12">
         <FileUpload v-if="visible" :limit-type="limitType" @upload-file="uploadFile" />
-        <input v-model="fileName" :disabled="audioData === null" type="text" class="input w-full">
+        <label for="audio-file-name" class="sr-only">音频文件名</label>
+        <input id="audio-file-name" name="audio-file-name" v-model="fileName" :disabled="audioData === null" type="text" class="input w-full">
       </div>
     </template>
   </CustomDialog>

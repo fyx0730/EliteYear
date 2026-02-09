@@ -34,67 +34,73 @@ function skip(path: string) {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100%-280px)]">
-    <ul class="w-56 m-0 mr-3 min-w-56 menu bg-base-200 pt-14">
+  <div class="h-full main-container-content flex flex-col min-h-screen">
+    <div class="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-6 px-2 sm:px-4 md:px-6 lg:px-8 py-4 lg:py-8">
+      <!-- 侧边栏导航 - 优化样式和交互，响应式设计 -->
+      <aside class="w-full lg:w-64 lg:min-w-[16rem] lg:sticky lg:top-8 lg:self-start">
+        <nav class="bg-base-200/80 backdrop-blur-sm rounded-2xl shadow-lg border border-base-300/50 overflow-hidden transition-all duration-300 hover:shadow-xl">
+          <ul class="menu p-4 space-y-1">
       <li v-for="item in menuList" :key="item.name">
-        <details v-if="item.children && !item.meta.hidden" open>
-          <summary>{{ item.meta.title }}</summary>
-          <ul>
+              <details v-if="item.children && !item.meta.hidden" open class="group">
+                <summary class="font-semibold text-base py-3 px-4 rounded-lg hover:bg-base-300/50 cursor-pointer transition-all duration-200">
+                  {{ item.meta.title }}
+                </summary>
+                <ul class="mt-1 ml-2 space-y-0.5">
             <li v-for="subItem in item.children" :key="subItem.name">
-              <details v-if="subItem.children" open>
-                <summary>{{ subItem.meta!.title }}</summary>
-                <ul>
+                    <details v-if="subItem.children" open class="group/sub">
+                      <summary class="text-sm py-2.5 px-3 rounded-lg hover:bg-base-300/40 cursor-pointer transition-all duration-200">
+                        {{ subItem.meta!.title }}
+                      </summary>
+                      <ul class="mt-0.5 ml-3 space-y-0.5">
                   <li v-for="subSubItem in subItem.children" :key="subSubItem.name">
                     <a
-                      :style="subSubItem.name === route.name ? 'background-color:rgba(12,12,12,0.2)' : ''"
+                            class="text-sm py-2 px-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-base-300/40 hover:translate-x-1"
+                            :class="subSubItem.name === route.name ? 'bg-primary text-primary-content font-medium shadow-sm' : ''"
                       @click="skip(subItem.path)"
-                    >{{
-                      subSubItem.meta!.title }}</a>
+                          >
+                            {{ subSubItem.meta!.title }}
+                          </a>
                   </li>
                 </ul>
               </details>
               <a
-                v-else :style="subItem.name === route.name ? 'background-color:rgba(12,12,12,0.2)' : ''"
+                      v-else
+                      class="text-sm py-2.5 px-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-base-300/40 hover:translate-x-1 block"
+                      :class="subItem.name === route.name ? 'bg-primary text-primary-content font-medium shadow-sm' : ''"
                 @click="skip(subItem.path)"
-              >{{
-                subItem.meta!.title }}</a>
+                    >
+                      {{ subItem.meta!.title }}
+                    </a>
             </li>
           </ul>
         </details>
         <a
-          v-else-if="!item.meta.hidden" :style="item.name === route.name ? 'background-color:rgba(12,12,12,0.2)' : ''"
+                v-else-if="!item.meta.hidden"
+                class="py-3 px-4 rounded-lg cursor-pointer transition-all duration-200 hover:bg-base-300/50 hover:translate-x-1 block"
+                :class="item.name === route.name ? 'bg-primary text-primary-content font-medium shadow-sm' : ''"
           @click="skip(item.path)"
-        >{{ item.meta!.title }}</a>
+              >
+                {{ item.meta!.title }}
+              </a>
         <div v-else />
       </li>
     </ul>
-    <router-view class="flex-1 mt-5" />
+      </nav>
+      </aside>
+
+      <!-- 主内容区 - 优化间距和容器 -->
+      <main class="flex-1 min-w-0">
+        <div class="animate-fadeIn">
+          <router-view />
+        </div>
+      </main>
   </div>
-  <footer class="p-10 rounded footer footer-center bg-base-200 h-70 flex flex-col gap-4 text-base-content">
-    <nav class="grid grid-flow-col gap-4">
-      <a class="cursor-pointer link link-hover text-inherit" target="_blank" href="https://1kw20.fun">{{ t('footer.self-reflection') }}</a>
-    </nav>
-    <nav>
-      <a class="cursor-pointer link link-hover text-inherit" target="_blank" href="https://1kw20.fun">{{ t('footer.thiefEasy') }}</a>
-    </nav>
-    <nav>
-      <div class="grid grid-flow-col gap-4">
-        <a href="https://github.com/LOG1997/log-lottery" target="_blank" class="cursor-pointer text-inherit">
-          <svg-icon name="github" />
-        </a>
-        <a href="https://twitter.com/TaborSwift" target="_blank" class="cursor-pointer "><svg-icon name="twitter" /></a>
-        <a href="https://www.instagram.com/log.z1997/" target="_blank" class="cursor-pointer ">
-          <svg-icon name="instagram" />
-        </a>
+    <footer class="mt-auto p-10 rounded-t-3xl footer footer-center bg-base-200/60 backdrop-blur-sm border-t border-base-300/50 text-base-content">
+      <div class="text-lg font-medium bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        英荔 AI，放飞孩子的想象力和创造力
       </div>
-    </nav>
-    <aside>
-      <a class="p-0 m-0 hover:text-primary" href="https://beian.miit.gov.cn/" target="_blank">
-        蜀ICP备2021028666号
-      </a>
-      <p>Copyright © {{ currentYear }} - All right reserved by <a class="link link-primary" href="https://github.com/LOG1997" target="_blank">log1997</a></p>
-    </aside>
   </footer>
+  </div>
 </template>
 
 <style scoped></style>

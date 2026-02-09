@@ -7,6 +7,236 @@
     themes: all;
 }
 
+/* 年会火红主题 - Festival Red Theme (基于 aqua 主题结构，参考图片色彩) */
+:root:has(input.theme-controller[value=festival-red]:checked),
+[data-theme=festival-red] {
+    color-scheme: dark;
+    --color-base-100: oklch(30% .18 15);
+    --color-base-200: oklch(25% .16 15);
+    --color-base-300: oklch(20% .14 15);
+    --color-base-content: oklch(95% .02 15);
+    --color-primary: oklch(85% .2 90);
+    --color-primary-content: oklch(25% .05 15);
+    --color-secondary: oklch(70% .25 25);
+    --color-secondary-content: oklch(95% .02 15);
+    --color-accent: oklch(90% .22 85);
+    --color-accent-content: oklch(30% .05 15);
+    --color-neutral: oklch(28% .12 15);
+    --color-neutral-content: oklch(90% .02 15);
+    --color-info: oklch(74% .16 232.661);
+    --color-info-content: oklch(29% .066 243.157);
+    --color-success: oklch(76% .177 163.223);
+    --color-success-content: oklch(37% .077 168.94);
+    --color-warning: oklch(88% .21 88);
+    --color-warning-content: oklch(30% .05 15);
+    --color-error: oklch(65% .28 15);
+    --color-error-content: oklch(95% .02 15);
+    --radius-selector: 1rem;
+    --radius-field: 0.5rem;
+    --radius-box: 1rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 1;
+    --noise: 0;
+}
+
+/* 年会火红主题 - 径向渐变背景效果 */
+[data-theme=festival-red] .main-container-content,
+[data-theme=festival-red] .main-container,
+[data-theme=festival-red] body {
+    background: radial-gradient(ellipse at center, 
+        #f0550a 0%, 
+        #d54409 25%, 
+        #b83a07 50%, 
+        #9d0500 100%);
+    background-attachment: fixed;
+}
+
+/* 年会火红主题 - 按钮颜色调整（移除紫色，改为红色/金色系） */
+[data-theme=festival-red] #menu .btn-neon {
+    --glow-color: rgb(255, 215, 61) !important;
+    --glow-spread-color: rgba(255, 180, 50, 0.781) !important;
+    --enhanced-glow-color: rgb(255, 230, 100) !important;
+    --btn-color: rgb(180, 50, 50) !important;
+    border-color: rgb(255, 215, 61) !important;
+    color: rgb(255, 215, 61) !important;
+    box-shadow: 0 0 1em .25em rgb(255, 215, 61),
+        0 0 4em 1em rgba(255, 180, 50, 0.781),
+        inset 0 0 .75em .25em rgb(255, 215, 61) !important;
+    text-shadow: 0 0 .5em rgb(255, 215, 61) !important;
+}
+
+[data-theme=festival-red] #menu .btn-neon:hover {
+    color: rgb(180, 50, 50) !important;
+    background-color: rgb(255, 215, 61) !important;
+    box-shadow: 0 0 1em .25em rgb(255, 215, 61),
+        0 0 4em 2em rgba(255, 180, 50, 0.781),
+        inset 0 0 .75em .25em rgb(255, 215, 61) !important;
+}
+
+[data-theme=festival-red] #menu .btn-neon::after {
+    background-color: rgba(255, 180, 50, 0.781) !important;
+}
+
+[data-theme=festival-red] #menu .btn-stars {
+    background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #FFD700 10%, #FF6B35 45%, #DC143C 67%, #B22222 87%) !important;
+}
+
+[data-theme=festival-red] #menu .btn-stars:active {
+    border: double 4px #FFD700 !important;
+}
+
+[data-theme=festival-red] #menu .btn-stars:active .circle {
+    background: #FFD700 !important;
+}
+
+[data-theme=festival-red] #menu .btn-stars #glow .circle:nth-of-type(1) {
+    background: rgba(255, 215, 61, 0.636) !important;
+}
+
+[data-theme=festival-red] #menu .btn-stars #glow .circle:nth-of-type(2) {
+    background: rgba(255, 140, 0, 0.704) !important;
+}
+
+[data-theme=festival-red] #menu .btn-cancel {
+    background-image: linear-gradient(#212121, #212121), linear-gradient(137.48deg, #FFD700 10%, #FF6B35 45%, #DC143C 67%, #B22222 87%) !important;
+}
+
+/* 年会火红主题 - 奖项列表背景色调整，使其更浅更透明，与红色背景更协调 */
+[data-theme=festival-red] .prize-card {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    backdrop-filter: blur(8px);
+}
+
+[data-theme=festival-red] .scroll-container,
+[data-theme=festival-red] .scroll-container-end,
+[data-theme=festival-red] .no-scroll {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme=festival-red] .scroll-container::before,
+[data-theme=festival-red] .scroll-container-end::before {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* ==================== 弹窗样式统一 - 与 Toast 保持一致 ==================== */
+
+/* DaisyUI Modal 基础样式 - 使用 Glassmorphism */
+.modal-box {
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                0 4px 16px rgba(255, 255, 255, 0.1) inset !important;
+    color: #FFFFFF !important;
+    text-align: center !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.modal-box h3 {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    text-align: center !important;
+}
+
+.modal-box p {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-weight: 500 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    text-align: center !important;
+}
+
+/* Festival-Red 主题 - Modal 优化 */
+[data-theme=festival-red] .modal-box {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 8px 32px rgba(157, 5, 0, 0.4),
+                0 4px 16px rgba(255, 255, 255, 0.15) inset,
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
+}
+
+[data-theme=festival-red] .modal-box h3 {
+    color: #FFFFFF !important;
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme=festival-red] .modal-box p {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Modal 背景遮罩 */
+.modal::backdrop {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+}
+
+[data-theme=festival-red] .modal::backdrop {
+    background: rgba(157, 5, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Modal Action 按钮区域 */
+.modal-action {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin-top: 1rem !important;
+}
+
+.modal-action .btn {
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transition: all 0.2s ease-out !important;
+    font-weight: 500 !important;
+}
+
+/* ErrorModal 样式统一 */
+[data-theme=festival-red] .fixed.inset-0.bg-black\/30 {
+    background: rgba(157, 5, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+[data-theme=festival-red] [class*="DialogPanel"] {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 8px 32px rgba(157, 5, 0, 0.4),
+                0 4px 16px rgba(255, 255, 255, 0.15) inset,
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    color: #FFFFFF !important;
+    text-align: center !important;
+}
+
+[data-theme=festival-red] [class*="DialogTitle"] {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    text-align: center !important;
+}
+
+[data-theme=festival-red] [class*="DialogDescription"] {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-weight: 500 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    text-align: center !important;
+}
+
 @utility w-option-xs {
     max-width: calc(var(--container-xs) - 90px);
 }

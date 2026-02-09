@@ -35,7 +35,7 @@ export const errorZhCn = {
     notImage: '不是图片',
     personIsAllDone: '抽奖抽完了',
     personNotEnough: '抽奖人数不足',
-    startDraw: '现在抽取{count}{leftover}人',
+    startDraw: '现在抽取 {count} {leftover} 人',
     completeInformation: '请填写完整信息',
     notJsonFile: '这不是一个JSON文件',
     notAudioFile: '这不是一个音频文件',

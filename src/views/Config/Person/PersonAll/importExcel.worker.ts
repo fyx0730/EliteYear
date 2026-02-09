@@ -40,7 +40,23 @@ globalThis.onmessage = async (e: MessageEvent<WorkerMessage>) => {
                 })
                 return
             }
-            allData = addOtherInfo(excelData)
+            // 处理导入数据：移除 identity 字段和 uid 字段（因为显示时使用序号）
+            const processedData = excelData.map((item: any) => {
+                const newItem: any = { ...item }
+                // 移除 identity 字段（可能是英文或中文）
+                delete newItem.identity
+                delete newItem.Identity
+                delete newItem['身份']
+                // 移除 uid 字段（可能是英文或中文翻译）
+                delete newItem.uid
+                delete newItem.UID
+                delete newItem['编号']
+                delete newItem.number
+                delete newItem.Number
+                delete newItem.ID
+                return newItem
+            })
+            allData = addOtherInfo(processedData)
             globalThis.postMessage({
                 type: 'done',
                 data: allData,

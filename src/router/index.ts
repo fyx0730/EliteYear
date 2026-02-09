@@ -10,6 +10,7 @@ export const configRoutes = {
     children: [
         {
             path: '',
+            name: 'ConfigIndex',
             redirect: '/log-lottery/config/person',
         },
         {
@@ -23,6 +24,7 @@ export const configRoutes = {
             children: [
                 {
                     path: '',
+                    name: 'PersonConfigIndex',
                     redirect: '/log-lottery/config/person/all',
                 },
                 {

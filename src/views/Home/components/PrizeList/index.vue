@@ -37,15 +37,17 @@ const {
       :submit-temporary-prize="submitTemporaryPrize"
       :submit-data="submitData"
     />
-    <div class="h-full">
+    <div class="flex h-full items-center">
+      <div v-if="temporaryPrize.isShow" class="h-full">
       <TemporaryList
-        v-if="temporaryPrize.isShow"
         :temporary-prize="temporaryPrize"
         :add-temporary-prize="addTemporaryPrize"
         :delete-temporary-prize="deleteTemporaryPrize"
       />
+      </div>
+      <template v-else>
+        <div class="h-full">
       <OfficialPrizeList
-        v-show="!temporaryPrize.isShow"
         v-model:prize-show="prizeShow"
         :temporary-prize-show="temporaryPrize.isShow"
         :local-prize-list="localPrizeList"
@@ -54,7 +56,9 @@ const {
         :add-temporary-prize="addTemporaryPrize"
       />
     </div>
-    <OperationButton v-if="!temporaryPrize.isShow" v-model:prize-show="prizeShow" :add-temporary-prize="addTemporaryPrize" />
+        <OperationButton v-model:prize-show="prizeShow" :add-temporary-prize="addTemporaryPrize" />
+      </template>
+    </div>
   </div>
 </template>
 

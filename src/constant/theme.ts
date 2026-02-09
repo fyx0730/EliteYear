@@ -34,5 +34,6 @@ export const daisyuiThemes = [
     'sunset',
     'luxury',
     'retro',
+    'festival-red', // 年会火红主题
 
 ]

@@ -33,6 +33,7 @@ export function useViewModel() {
         getIsShowAvatar: isShowAvatar,
         getDefiniteTime: definiteTime,
         getWinMusic: isWinMusic,
+        getCardOpacity: cardOpacity,
     } = storeToRefs(globalConfig)
     const { getAlreadyPersonList: alreadyPersonList, getNotPersonList: notPersonList } = storeToRefs(personConfig)
 
@@ -55,6 +56,7 @@ export function useViewModel() {
     const titleFontSyncGlobalValue = ref(structuredClone(titleFontSyncGlobal.value))
     const definiteTimeValue = ref(structuredClone(definiteTime.value))
     const isWinMusicValue = ref(structuredClone(isWinMusic.value))
+    const cardOpacityValue = ref(structuredClone(cardOpacity.value))
     const formData = ref({
         rowCount: rowCountValue,
     })
@@ -199,6 +201,9 @@ export function useViewModel() {
     watch(isWinMusicValue, () => {
         globalConfig.setIsPlayWinMusic(isWinMusicValue.value)
     })
+    watch(cardOpacityValue, (val: number) => {
+        globalConfig.setCardOpacity(val)
+    })
     watch(textSizeValue, (val: number) => {
         globalConfig.setTextSize(val)
     })
@@ -237,5 +242,6 @@ export function useViewModel() {
         importAllConfigData,
         definiteTimeValue,
         isWinMusicValue,
+        cardOpacityValue,
     }
 }

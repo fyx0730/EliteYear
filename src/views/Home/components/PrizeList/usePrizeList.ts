@@ -1,6 +1,7 @@
 import type { IPrizeConfig } from '@/types/storeType'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
+import { useToast } from 'vue-toast-notification'
 import i18n from '@/locales/i18n'
 
 import useStore from '@/store'
@@ -9,6 +10,7 @@ export function usePrizeList(temporaryPrizeRef: any) {
     const prizeConfig = useStore().prizeConfig
     const globalConfig = useStore().globalConfig
     const system = useStore().system
+    const toast = useToast()
     const {
         getPrizeConfig: localPrizeList,
         getCurrentPrize: currentPrize,
@@ -35,7 +37,12 @@ export function usePrizeList(temporaryPrizeRef: any) {
     function submitTemporaryPrize() {
         if (!temporaryPrize.value.name || !temporaryPrize.value.count) {
             // eslint-disable-next-line no-alert
-            alert(i18n.global.t('error.completeInformation'))
+            toast.open({
+                message: i18n.global.t('error.completeInformation'),
+                type: 'warning',
+                position: 'top-right',
+                duration: 3000,
+            })
             return
         }
         temporaryPrize.value.isShow = true

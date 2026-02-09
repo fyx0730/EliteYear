@@ -134,3 +134,25 @@ dist-file
 .yarn/install-state.gz
 .pnp.*
 target
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Shared/Cursor files
+.shared/
+
+# Test files
+test_person_list_*.xlsx
+*.xlsx

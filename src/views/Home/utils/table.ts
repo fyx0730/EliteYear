@@ -15,11 +15,32 @@ export function initTableData({ allPersonList, rowCount }: { allPersonList: IPer
     }
     const totalCount = rowCount * 7
     const allPersonLength = allPersonList.length
+    
     if (allPersonLength < totalCount) {
-        tableData = Array.from({ length: totalCount }, () => JSON.parse(JSON.stringify(allPersonList))).flat()
+        // 如果人员数量少于卡牌数量，使用循环填充，但确保每个人员只出现一次
+        // 使用取模运算循环使用人员，避免重复显示同一人员
+        const copiedList = allPersonList.map((person, index) => ({
+            ...JSON.parse(JSON.stringify(person)),
+            originalIndex: index
+        }))
+        
+        // 循环填充，确保每个人员按顺序出现，不重复
+        tableData = Array.from({ length: totalCount }, (_, i) => {
+            const personIndex = i % allPersonLength
+            return {
+                ...JSON.parse(JSON.stringify(copiedList[personIndex])),
+                originalIndex: personIndex,
+                // 添加一个唯一标识，用于区分同一人员的不同卡牌实例
+                cardIndex: i
+            }
+        })
     }
     else {
-        tableData = allPersonList.slice(0, totalCount)
+        // 只取前 totalCount 个，并为每个人员添加 originalIndex 属性
+        tableData = allPersonList.slice(0, totalCount).map((person, index) => ({
+            ...person,
+            originalIndex: index
+        }))
     }
     tableData = filterData(tableData.slice(0, totalCount), rowCount)
     return tableData

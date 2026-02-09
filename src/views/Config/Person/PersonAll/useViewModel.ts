@@ -124,36 +124,21 @@ export function useViewModel({ exportInputFileRef }: { exportInputFileRef: Ref<H
     // 导出数据
     function exportData() {
         let data = JSON.parse(JSON.stringify(allPersonList.value))
-        // 排除一些字段
-        for (let i = 0; i < data.length; i++) {
-            delete data[i].x
-            delete data[i].y
-            delete data[i].id
-            delete data[i].createTime
-            delete data[i].updateTime
-            delete data[i].prizeId
-            // 修改字段名称
-            if (data[i].isWin) {
-                data[i].isWin = i18n.global.t('data.yes')
+        // 排除一些字段，并重新构建数据对象，确保不包含不需要的字段
+        const exportData = data.map((item: any, index: number) => {
+            const newItem: any = {
+                [i18n.global.t('data.number')]: (index + 1).toString(), // 使用序号作为编号
+                [i18n.global.t('data.name')]: item.name || '',
+                [i18n.global.t('data.department')]: item.department || '',
+                [i18n.global.t('data.avatar')]: item.avatar || '',
+                [i18n.global.t('data.isWin')]: item.isWin ? i18n.global.t('data.yes') : i18n.global.t('data.no'),
+                [i18n.global.t('data.prizeName')]: Array.isArray(item.prizeName) ? item.prizeName.join(',') : (item.prizeName || ''),
+                [i18n.global.t('data.prizeTime')]: Array.isArray(item.prizeTime) ? item.prizeTime.join(',') : (item.prizeTime || ''),
             }
-            else {
-                data[i].isWin = i18n.global.t('data.no')
-            }
-            // 格式化数组为
-            data[i].prizeTime = data[i].prizeTime.join(',')
-            data[i].prizeName = data[i].prizeName.join(',')
-        }
-        let dataString = JSON.stringify(data)
-        dataString = dataString
-            .replaceAll(/uid/g, i18n.global.t('data.number'))
-            .replaceAll(/isWin/g, i18n.global.t('data.isWin'))
-            .replaceAll(/department/g, i18n.global.t('data.department'))
-            .replaceAll(/name/g, i18n.global.t('data.name'))
-            .replaceAll(/identity/g, i18n.global.t('data.identity'))
-            .replaceAll(/prizeName/g, i18n.global.t('data.prizeName'))
-            .replaceAll(/prizeTime/g, i18n.global.t('data.prizeTime'))
+            return newItem
+        })
 
-        data = JSON.parse(dataString)
+        data = exportData
 
         if (data.length > 0) {
             const dataBinary = XLSX.utils.json_to_sheet(data)
@@ -183,7 +168,12 @@ export function useViewModel({ exportInputFileRef }: { exportInputFileRef: Ref<H
         event.preventDefault()
         // 表单中的验证信息清除
 
-        const personData = addOtherInfo([toRaw(singlePersonData.value)])
+        // 计算当前列表的最大 orderIndex，确保新添加的人员排在最后
+        const maxOrderIndex = allPersonList.value.length > 0
+            ? Math.max(...allPersonList.value.map(p => (p as any).orderIndex ?? -1), -1) + 1
+            : 0
+        
+        const personData = addOtherInfo([toRaw(singlePersonData.value)], maxOrderIndex)
         personData[0].id = uuidv4()
         personConfig.addOnePerson(personData)
         // singlePersonData.value = {} as IBasePersonConfig
