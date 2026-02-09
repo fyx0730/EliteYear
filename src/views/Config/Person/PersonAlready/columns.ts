@@ -152,7 +152,7 @@ export function tableColumns(props: IColumnsProps) {
                 },
             },
         ],
-    })
+    } as any)
     
     return columns
 }

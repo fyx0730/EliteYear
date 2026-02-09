@@ -40,6 +40,9 @@ export function useBluetooth() {
 
         try {
             // 请求设备连接
+            if (!navigator.bluetooth) {
+                throw new Error('浏览器不支持 Web Bluetooth API')
+            }
             device.value = await navigator.bluetooth.requestDevice({
                 filters: [
                     { services: [MICROBLOCKS_SERVICE_UUID] }
@@ -126,6 +129,9 @@ export function useBluetooth() {
         if (!device.value.gatt?.connected) {
             // 如果设备存在但未连接，尝试重新连接
             try {
+                if (!device.value.gatt) {
+                    throw new Error('GATT 服务器不可用')
+                }
                 await device.value.gatt.connect()
                 // 重新连接后，更新连接状态
                 isConnected.value = true
@@ -139,6 +145,9 @@ export function useBluetooth() {
         if (!rxCharacteristic.value) {
             try {
                 const server = device.value.gatt
+                if (!server) {
+                    throw new Error('GATT 服务器不可用')
+                }
                 const service = await server.getPrimaryService(MICROBLOCKS_SERVICE_UUID)
                 rxCharacteristic.value = await service.getCharacteristic(MICROBLOCKS_RX_CHAR_UUID)
             } catch (error: any) {

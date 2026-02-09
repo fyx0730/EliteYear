@@ -16,6 +16,7 @@ interface BluetoothRemoteGATTCharacteristic extends EventTarget {
     service: BluetoothRemoteGATTService
     uuid: string
     properties: BluetoothCharacteristicProperties
+    value?: DataView // 当前特征值
     readValue(): Promise<DataView>
     writeValue(value: BufferSource): Promise<void>
     startNotifications(): Promise<BluetoothRemoteGATTCharacteristic>
