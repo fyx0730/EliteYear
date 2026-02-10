@@ -85,13 +85,13 @@ watch ([prizeShow, () => props.temporaryPrizeShow], (val) => {
           >
             <div
               v-if="item.isShow"
-              class="relative flex flex-row items-center justify-between w-64 h-20 px-3 gap-3 shadow-lg card bg-base-100 prize-card"
+              class="relative flex flex-row items-center justify-between w-52 h-14 px-2 gap-2 shadow-lg card bg-base-100 prize-card"
             >
               <div
                 v-if="item.isUsed"
                 class="absolute z-50 w-full left-0 h-full bg-gray-800/70 item-mask rounded-xl"
               />
-              <figure class="w-14 h-14 rounded flex-shrink-0">
+              <figure class="w-11 h-11 rounded flex-shrink-0">
                 <ImageSync v-if="item.picture.url" :img-item="item.picture" />
                 <img
                   v-else :src="defaultPrizeImage" alt="Prize"
@@ -101,17 +101,17 @@ watch ([prizeShow, () => props.temporaryPrizeShow], (val) => {
               <div class="flex-1 min-w-0 flex flex-col justify-center">
                 <div class="tooltip tooltip-left w-full" :data-tip="item.name">
                   <h2
-                    class="text-[16px] font-semibold p-0 m-0 overflow-hidden whitespace-nowrap text-ellipsis leading-tight"
+                    class="text-xs font-semibold p-0 m-0 overflow-hidden whitespace-nowrap text-ellipsis leading-tight"
                   >
                     {{ item.name }}
                   </h2>
                 </div>
-                <div class="relative mt-1">
+                <div class="relative mt-0.5">
                   <progress
-                    class="w-full h-4 progress bg-[#52545b] progress-primary" :value="item.isUsedCount"
+                    class="w-full h-2.5 progress bg-[#52545b] progress-primary" :value="item.isUsedCount"
                     :max="item.count"
                   />
-                  <p class="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 text-[11px] text-gray-900 font-semibold z-10 leading-none drop-shadow-sm pointer-events-none">
+                  <p class="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 text-[9px] text-gray-900 font-semibold z-10 leading-none drop-shadow-sm pointer-events-none">
                     {{ item.isUsedCount }}/{{ item.count }}
                   </p>
                 </div>
